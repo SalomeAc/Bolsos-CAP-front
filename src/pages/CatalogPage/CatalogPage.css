@@ -1,0 +1,44 @@
+.section-block {
+  padding: 28px;
+  position: relative;
+  background: transparent;
+}
+
+.section-block::before {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(134, 104, 176, 0.08);
+  pointer-events: none;
+}
+
+.section-heading {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.section-heading h1 {
+  margin: 0;
+  font-family: var(--heading);
+  color: #2c2438;
+  font-size: clamp(1.9rem, 4vw, 3rem);
+}
+
+.section-heading p {
+  margin: 0;
+  color: #2c2438;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+}
