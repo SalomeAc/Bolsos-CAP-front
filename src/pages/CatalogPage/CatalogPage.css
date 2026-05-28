@@ -28,7 +28,10 @@
 }
 
 .catalog-header p {
-  max-width: 640px;
+  max-width: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .section-heading {

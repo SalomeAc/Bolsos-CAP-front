@@ -3,11 +3,25 @@
   gap: 24px;
 }
 
+.homepage-banner {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .hero-grid {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  /* force explicit percentages to ensure left column is smaller */
+  grid-template-columns: 35% 65% !important;
   gap: 24px;
   align-items: stretch;
+}
+
+/* Ensure hero grid matches the page content width and is centered like other sections */
+.hero-grid {
+  width: 100%;
+  max-width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
 }
 
 .hero-copy,
@@ -80,14 +94,41 @@
   gap: 12px;
 }
 
+/* Ensure primary button is visible over the purple hero-panel background */
+.hero-panel .button-primary {
+  background: #ffffff;
+  color: var(--accent);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(34, 27, 49, 0.06);
+}
+
+.hero-panel .button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(34, 27, 49, 0.12);
+}
+
 .hero-panel {
   display: grid;
-  gap: 22px;
-  align-content: space-between;
+  /* match spacing with .hero-copy: same gap, align and min-height */
+  gap: 18px;
+  align-content: center;
+  min-height: 420px;
   background: linear-gradient(160deg, #8668b0, #9d7fc4), #8668b0;
   color: #ffffff;
   position: relative;
   overflow: hidden;
+}
+
+/* Use the document serif heading for hero-panel h1 */
+.hero-panel h1 {
+  /* use same serif heading, size and spacing as .hero-copy h1 */
+  font-family: var(--heading);
+  color: inherit;
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .hero-panel::before {
@@ -133,6 +174,16 @@
   border: 1px solid rgba(134, 104, 176, 0.08);
   pointer-events: none;
 }
+
+/* Center action buttons inside section blocks and match spacing */
+.section-block .hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.section-block > * { position: relative; z-index: 1; }
 
 .section-heading {
   display: grid;

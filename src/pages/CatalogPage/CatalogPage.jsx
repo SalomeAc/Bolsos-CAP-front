@@ -29,10 +29,11 @@ export function CatalogPage() {
         <div className="catalog-header">
           <div>
             <span className="eyebrow">Catálogo</span>
-            <h1>Explora todos los bolsos disponibles.</h1>
+            <h1>Descubre la colección completa de bolsos artesanales</h1>
             <p>
-              Cada producto tiene su propia página con información básica para
-              que luego puedas conectar inventario, tallas o compra en línea.
+              Cada pieza conserva su identidad propia y está lista para mostrar
+              detalles, variantes e información útil en una experiencia limpia y
+              coherente.
             </p>
           </div>
 
