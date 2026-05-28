@@ -1,34 +1,24 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/useAuthStore.js";
-import "./LoginPage.css";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../store/useAuthStore.js'
+import './LoginPage.css'
 
 export function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const signInWithGoogle = useAuthStore((state) => state.signInWithGoogle);
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const signInWithGoogle = useAuthStore((state) => state.signInWithGoogle)
 
   const handleGoogleSignIn = async (e) => {
-    e?.preventDefault();
-    setLoading(true);
+    e?.preventDefault()
+    setLoading(true)
     setTimeout(() => {
-      signInWithGoogle();
-      navigate("/profile");
-    }, 500);
-  };
+      signInWithGoogle()
+      navigate('/profile')
+    }, 500)
+  }
 
   return (
     <section className="auth-layout">
-      <div className="auth-card auth-card--center" aria-live="polite">
-        <div className="auth-visual">
-          <div className="brand-mark">
-            <img className="brand-mark" src="/icon.png" alt="Bolsos Cap" />
-          </div>
-          <div className="visual-copy">
-            <h2>Bolsos Cap</h2>
-            <p>Accede con Google para continuar — sin contraseñas.</p>
-          </div>
-        </div>
   <div className="auth-card">
 
     <div className="auth-form">
