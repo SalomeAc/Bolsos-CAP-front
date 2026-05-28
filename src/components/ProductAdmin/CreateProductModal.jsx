@@ -5,21 +5,21 @@ import "./CreateProductModal.css";
 const initialFormState = {
   name: "",
   description: "",
-  colors: "",
+  color: "",
   dimensions: "",
   materials: "",
   type: "",
-  imageUrl: "",
+  photo: "",
 };
 
 const initialErrors = {
   name: "",
   description: "",
-  colors: "",
+  color: "",
   dimensions: "",
   materials: "",
   type: "",
-  imageUrl: "",
+  photo: "",
 };
 
 function slugify(value) {
@@ -65,8 +65,8 @@ export function CreateProductModal({ open, onClose, onCreate }) {
         "La descripción debe tener al menos 20 caracteres.";
     }
 
-    if (!formState.colors.trim()) {
-      nextErrors.colors = "El color es obligatorio.";
+    if (!formState.color.trim()) {
+      nextErrors.color = "El color es obligatorio.";
     }
 
     if (!formState.dimensions.trim()) {
@@ -81,8 +81,8 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       nextErrors.type = "El tipo de producto es obligatorio.";
     }
 
-    if (!formState.imageUrl.trim() || !isValidUrl(formState.imageUrl.trim())) {
-      nextErrors.imageUrl = "Ingresa una URL de imagen válida.";
+    if (!formState.photo.trim() || !isValidUrl(formState.photo.trim())) {
+      nextErrors.photo = "Ingresa una URL de imagen válida.";
     }
 
     return nextErrors;
@@ -93,6 +93,16 @@ export function CreateProductModal({ open, onClose, onCreate }) {
     setFormState((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: "" }));
   };
+
+  function transformDriveUrl(url) {
+  const match = url.match(/\/d\/([^/]+)/);
+
+  if (!match) {
+    return url;
+  }
+
+  return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+}
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -110,12 +120,11 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       slug: slug || `producto-${Date.now()}`,
       name: formState.name.trim(),
       description: formState.description.trim(),
-      colors: formState.colors.trim(),
+      color: formState.color.trim(),
       dimensions: formState.dimensions.trim(),
       materials: formState.materials.trim(),
-      category: formState.type.trim(),
-      image: formState.imageUrl.trim(),
-      price: "S/ 0",
+      type: formState.type.trim(),
+      photo: transformDriveUrl(formState.photo.trim()),
     };
 
     onCreate(newProduct);
@@ -163,15 +172,15 @@ export function CreateProductModal({ open, onClose, onCreate }) {
           <label className="form-field">
             <span>Color</span>
             <input
-              name="colors"
-              value={formState.colors}
+              name="color"
+              value={formState.color}
               onChange={handleChange}
               placeholder="Ej. beige, terracota"
               autoComplete="off"
               required
             />
-            {errors.colors ? (
-              <span className="field-error">{errors.colors}</span>
+            {errors.color ? (
+              <span className="field-error">{errors.color}</span>
             ) : null}
           </label>
 
@@ -208,15 +217,15 @@ export function CreateProductModal({ open, onClose, onCreate }) {
           <label className="form-field form-field--full">
             <span>Foto (URL)</span>
             <input
-              name="imageUrl"
-              value={formState.imageUrl}
+              name="photo"
+              value={formState.photo}
               onChange={handleChange}
               placeholder="https://..."
               autoComplete="off"
               required
             />
-            {errors.imageUrl ? (
-              <span className="field-error">{errors.imageUrl}</span>
+            {errors.photo ? (
+              <span className="field-error">{errors.photo}</span>
             ) : null}
           </label>
 
