@@ -32,7 +32,9 @@ const formatDimensions = (value) => {
   const toParts = (v) => {
     if (!v) return [];
     const cleaned = String(v).replace(/\s*cm\s*$/i, "");
-    const [width, height, depth] = cleaned.split("x").map((part) => part.trim());
+    const [width, height, depth] = cleaned
+      .split("x")
+      .map((part) => part.trim());
     return [
       width ? `Ancho: ${width} cm` : null,
       height ? `Alto: ${height} cm` : null,
@@ -41,14 +43,16 @@ const formatDimensions = (value) => {
   };
 
   if (Array.isArray(value)) {
-    return value.map((v) => toParts(v).join(" — ") );
+    return value.map((v) => toParts(v).join(" — "));
   }
 
   return toParts(value);
 };
 
 const formatDimensionLabel = (value) => {
-  const normalizedValue = Array.isArray(value) ? value.join(" x ") : String(value);
+  const normalizedValue = Array.isArray(value)
+    ? value.join(" x ")
+    : String(value);
   const match = normalizedValue.match(/^([0-9]+(?:\.[0-9]+)?)\s*(cm)?$/i);
 
   if (match) {
@@ -59,7 +63,9 @@ const formatDimensionLabel = (value) => {
 };
 
 const getColorHex = (colorName) => {
-  const normalized = String(Array.isArray(colorName) ? colorName.join(" ") : colorName)
+  const normalized = String(
+    Array.isArray(colorName) ? colorName.join(" ") : colorName,
+  )
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
@@ -89,7 +95,7 @@ const getColorHex = (colorName) => {
     vainilla: "#f4e5b8",
     oliva: "#8f9457",
     salvia: "#a6b88e",
-    lila: "#a299c1"
+    lila: "#a299c1",
   };
 
   const exactMatch = colorMap[normalized];
@@ -132,14 +138,21 @@ export function ProductPage({ product }) {
 
   const materialOptions = splitList(product.materials);
   const dimensionOptions = splitList(product.dimensions || product.dimension);
-  console.log("DIMENSION OPTIONS RAW:", product.dimensions || product.dimension);
+  console.log(
+    "DIMENSION OPTIONS RAW:",
+    product.dimensions || product.dimension,
+  );
   const colorOptions = mergeLists(product.color, product.colors);
 
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [isDeletingModalOpen, setIsDeletingModalOpen] = useState(false);
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState(materialOptions[0] ?? "");
-  const [selectedDimension, setSelectedDimension] = useState(dimensionOptions[0] ?? "");
+  const [selectedMaterial, setSelectedMaterial] = useState(
+    materialOptions[0] ?? "",
+  );
+  const [selectedDimension, setSelectedDimension] = useState(
+    dimensionOptions[0] ?? "",
+  );
   const [selectedColor, setSelectedColor] = useState(colorOptions[0] ?? "");
 
   if (!product) {
@@ -159,10 +172,14 @@ export function ProductPage({ product }) {
 
     try {
       if (product._id) {
-        const updatedProduct = await updateProductApi(product._id, {
-          ...product,
-          ...updates,
-        });
+        const updatedProduct = await updateProductApi(
+          product._id,
+          {
+            ...product,
+            ...updates,
+          },
+          authToken,
+        );
         updateProductLocal(product.code || product._id, updatedProduct);
       } else {
         updateProductLocal(product.code || product._id, updates);
@@ -182,7 +199,7 @@ export function ProductPage({ product }) {
 
     try {
       if (productToDelete._id) {
-        await deleteProductApi(productToDelete._id);
+        await deleteProductApi(productToDelete._id, authToken);
       }
 
       deleteProductLocal(productToDelete.code || productToDelete._id);
@@ -196,23 +213,23 @@ export function ProductPage({ product }) {
     }
   };
 
-const getImageUrl = (url) => {
-  if (!url) return "";
+  const getImageUrl = (url) => {
+    if (!url) return "";
 
-  // Si ya viene en formato correcto
-  if (url.includes("uc?export=view&id=")) {
+    // Si ya viene en formato correcto
+    if (url.includes("uc?export=view&id=")) {
+      return url;
+    }
+
+    // Links tipo file/d/ID/view
+    const fileMatch = url.match(/\/d\/([^/]+)/);
+
+    if (fileMatch?.[1]) {
+      return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
+    }
+
     return url;
-  }
-
-  // Links tipo file/d/ID/view
-  const fileMatch = url.match(/\/d\/([^/]+)/);
-
-  if (fileMatch?.[1]) {
-    return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
-  }
-
-  return url;
-};
+  };
 
   return (
     <section className="product-detail-layout">
@@ -222,13 +239,13 @@ const getImageUrl = (url) => {
       >
         {product.photo ? (
           <img
-  src={getImageUrl(product.photo)}
-  alt={product.name}
-  onError={(e) => {
-    console.log("ERROR CARGANDO:", product.photo);
-    console.log("URL FINAL:", getImageUrl(product.photo));
-  }}
-/>
+            src={getImageUrl(product.photo)}
+            alt={product.name}
+            onError={(e) => {
+              console.log("ERROR CARGANDO:", product.photo);
+              console.log("URL FINAL:", getImageUrl(product.photo));
+            }}
+          />
         ) : (
           <span>{product.name.slice(0, 2).toUpperCase()}</span>
         )}
@@ -278,7 +295,9 @@ const getImageUrl = (url) => {
           )}
         </div>
         <h1>{product.name}</h1>
-        <p className="product-code">Código: {(product.code || product._id || "producto").toUpperCase()}</p>
+        <p className="product-code">
+          Código: {(product.code || product._id || "producto").toUpperCase()}
+        </p>
         <p>{product.description}</p>
 
         <div className="product-options">
@@ -301,7 +320,10 @@ const getImageUrl = (url) => {
           </div>
 
           <div className="product-dropdown">
-            <label className="product-dropdown-label" htmlFor="dimension-select">
+            <label
+              className="product-dropdown-label"
+              htmlFor="dimension-select"
+            >
               Dimensiones
             </label>
             <select
@@ -311,7 +333,9 @@ const getImageUrl = (url) => {
               onChange={(event) => setSelectedDimension(event.target.value)}
             >
               {dimensionOptions.map((dimension) => {
-                const dimensionValue = Array.isArray(dimension) ? dimension.join(" x ") : String(dimension);
+                const dimensionValue = Array.isArray(dimension)
+                  ? dimension.join(" x ")
+                  : String(dimension);
 
                 return (
                   <option key={dimensionValue} value={dimensionValue}>
@@ -326,7 +350,11 @@ const getImageUrl = (url) => {
             <span className="product-dropdown-label">Color</span>
             {colorOptions.length > 0 ? (
               <>
-                <div className="color-swatches" role="list" aria-label="Colores disponibles">
+                <div
+                  className="color-swatches"
+                  role="list"
+                  aria-label="Colores disponibles"
+                >
                   {colorOptions.map((color) => {
                     const colorLabel = getColorText(color);
                     const isSelected = selectedColor === colorLabel;
@@ -358,10 +386,11 @@ const getImageUrl = (url) => {
                 </p>
               </>
             ) : (
-              <p className="selection-empty-state">No hay colores disponibles.</p>
+              <p className="selection-empty-state">
+                No hay colores disponibles.
+              </p>
             )}
           </div>
-
         </div>
 
         <div className="hero-actions">

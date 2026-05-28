@@ -50,6 +50,7 @@ function buildGoogleProfile(credentialPayload, sessionToken) {
     picture: credentialPayload.picture || '',
     provider: 'google',
     token: sessionToken,
+    isAdmin: false,
   }
 }
 
@@ -74,16 +75,15 @@ export const useAuthStore = create(
         }
 
         const credentialPayload = decodeJwtPayload(credential) || {}
-        const backendProfile = data?.user || data?.profile || null
-        const currentUser = backendProfile
-          ? {
-              name: normalizeUtf8Text(backendProfile.name || backendProfile.firstName || credentialPayload.name || credentialPayload.given_name || 'Usuario Google'),
+        const backendProfile = data?.user || {}
+        const currentUser = {
+              name: normalizeUtf8Text(backendProfile.firstName || credentialPayload.given_name || 'Usuario Google'),
               email: normalizeUtf8Text(backendProfile.email || credentialPayload.email || ''),
               picture: backendProfile.picture || credentialPayload.picture || '',
-              provider: backendProfile.provider || 'google',
+              provider: backendProfile.authProvider || 'google',
               token: data.token,
+              isAdmin: backendProfile.isAdmin || false,
             }
-          : buildGoogleProfile(credentialPayload, data.token)
 
         set({
           currentUser,

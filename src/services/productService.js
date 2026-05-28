@@ -44,11 +44,12 @@ export async function fetchProducts() {
   return handleResponse(response)
 }
 
-export async function createProduct(product) {
+export async function createProduct(product, token) {
   const response = await fetch(`${API_BASE_URL}/api/products`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(buildProductPayload(product)),
   })
@@ -56,11 +57,12 @@ export async function createProduct(product) {
   return handleResponse(response)
 }
 
-export async function updateProduct(productId, product) {
+export async function updateProduct(productId, product, token) {
   const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(buildProductPayload(product)),
   })
@@ -68,9 +70,12 @@ export async function updateProduct(productId, product) {
   return handleResponse(response)
 }
 
-export async function deleteProduct(productId) {
+export async function deleteProduct(productId, token) {
   const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
     method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
   })
 
   return handleResponse(response)
