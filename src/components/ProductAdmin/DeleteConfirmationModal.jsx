@@ -1,14 +1,18 @@
-import { Modal } from '../Modal/Modal.jsx'
-import './DeleteConfirmationModal.css'
+import { Modal } from "../Modal/Modal.jsx";
+import "./DeleteConfirmationModal.css";
 
-export function DeleteConfirmationModal({ open, product, onClose, onConfirm, isLoading }) {
+export function DeleteConfirmationModal({
+  open,
+  product,
+  onClose,
+  onConfirm,
+  isLoading,
+}) {
   const handleConfirm = () => {
-    // TODO: connect deleteProduct service
-    onConfirm(product.slug)
-    onClose()
-  }
+    onConfirm(product);
+  };
 
-  if (!product) return null
+  if (!product) return null;
 
   return (
     <Modal
@@ -32,7 +36,10 @@ export function DeleteConfirmationModal({ open, product, onClose, onConfirm, isL
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p>¿Estás seguro de que deseas eliminar el producto <strong>{product.name}</strong>?</p>
+          <p>
+            ¿Estás seguro de que deseas eliminar el producto{" "}
+            <strong>{product.name}</strong>?
+          </p>
         </div>
 
         <div className="delete-actions">
@@ -50,10 +57,10 @@ export function DeleteConfirmationModal({ open, product, onClose, onConfirm, isL
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? 'Eliminando...' : 'Eliminar'}
+            {isLoading ? "Eliminando..." : "Eliminar"}
           </button>
         </div>
       </div>
     </Modal>
-  )
+  );
 }

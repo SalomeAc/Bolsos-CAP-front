@@ -1,104 +1,105 @@
-import { useEffect, useState } from 'react'
-import { Modal } from '../Modal/Modal.jsx'
-import './EditProductModal.css'
+import { useEffect, useState } from "react";
+import { Modal } from "../Modal/Modal.jsx";
+import "./EditProductModal.css";
 
 const initialErrors = {
-  name: '',
-  description: '',
-  colors: '',
-  dimensions: '',
-  materials: '',
-  type: '',
-  imageUrl: '',
-}
+  name: "",
+  description: "",
+  colors: "",
+  dimensions: "",
+  materials: "",
+  type: "",
+  imageUrl: "",
+};
 
 function isValidUrl(value) {
   try {
-    const url = new URL(value)
-    return url.protocol === 'http:' || url.protocol === 'https:'
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
   } catch {
-    return false
+    return false;
   }
 }
 
 export function EditProductModal({ open, product, onClose, onSave }) {
   const [formState, setFormState] = useState({
-    name: '',
-    description: '',
-    colors: '',
-    dimensions: '',
-    materials: '',
-    type: '',
-    imageUrl: '',
-  })
-  const [errors, setErrors] = useState(initialErrors)
+    name: "",
+    description: "",
+    colors: "",
+    dimensions: "",
+    materials: "",
+    type: "",
+    imageUrl: "",
+  });
+  const [errors, setErrors] = useState(initialErrors);
 
   useEffect(() => {
     if (!open || !product) {
-      return
+      return;
     }
 
     setFormState({
-      name: product.name || '',
-      description: product.description || '',
-      colors: product.colors || '',
-      dimensions: product.dimensions || '',
-      materials: product.materials || '',
-      type: product.category || '',
-      imageUrl: product.image || '',
-    })
-    setErrors(initialErrors)
-  }, [open, product])
+      name: product.name || "",
+      description: product.description || "",
+      colors: product.colors || "",
+      dimensions: product.dimensions || "",
+      materials: product.materials || "",
+      type: product.category || "",
+      imageUrl: product.image || "",
+    });
+    setErrors(initialErrors);
+  }, [open, product]);
 
   const validate = () => {
-    const nextErrors = { ...initialErrors }
+    const nextErrors = { ...initialErrors };
 
     if (formState.name.trim().length < 4) {
-      nextErrors.name = 'Ingresa un nombre válido de al menos 4 caracteres.'
+      nextErrors.name = "Ingresa un nombre válido de al menos 4 caracteres.";
     }
 
     if (formState.description.trim().length < 20) {
-      nextErrors.description = 'La descripción debe tener al menos 20 caracteres.'
+      nextErrors.description =
+        "La descripción debe tener al menos 20 caracteres.";
     }
 
     if (!formState.colors.trim()) {
-      nextErrors.colors = 'El color es obligatorio.'
+      nextErrors.colors = "El color es obligatorio.";
     }
 
     if (!formState.dimensions.trim()) {
-      nextErrors.dimensions = 'Las dimensiones son obligatorias.'
+      nextErrors.dimensions = "Las dimensiones son obligatorias.";
     }
 
     if (!formState.materials.trim()) {
-      nextErrors.materials = 'Los materiales son obligatorios.'
+      nextErrors.materials = "Los materiales son obligatorios.";
     }
 
     if (!formState.type.trim()) {
-      nextErrors.type = 'El tipo de producto es obligatorio.'
+      nextErrors.type = "El tipo de producto es obligatorio.";
     }
 
     if (!formState.imageUrl.trim() || !isValidUrl(formState.imageUrl.trim())) {
-      nextErrors.imageUrl = 'Ingresa una URL de imagen válida.'
+      nextErrors.imageUrl = "Ingresa una URL de imagen válida.";
     }
 
-    return nextErrors
-  }
+    return nextErrors;
+  };
 
   const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormState((current) => ({ ...current, [name]: value }))
-    setErrors((current) => ({ ...current, [name]: '' }))
-  }
+    const { name, value } = event.target;
+    setFormState((current) => ({ ...current, [name]: value }));
+    setErrors((current) => ({ ...current, [name]: "" }));
+  };
 
   const handleSubmit = (event) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    const nextErrors = validate()
-    const invalidFields = Object.values(nextErrors).filter(Boolean)
+    const nextErrors = validate();
+    const invalidFields = Object.values(nextErrors).filter(Boolean);
 
     if (invalidFields.length > 0) {
-      setErrors(nextErrors)
-      return
+      setErrors(nextErrors);
+      return;
     }
 
     const updatedProduct = {
@@ -109,14 +110,12 @@ export function EditProductModal({ open, product, onClose, onSave }) {
       materials: formState.materials.trim(),
       category: formState.type.trim(),
       image: formState.imageUrl.trim(),
-    }
+    };
 
-    // TODO: connect updateProduct service
-    onSave(updatedProduct)
-    onClose()
-  }
+    onSave(updatedProduct);
+  };
 
-  if (!product) return null
+  if (!product) return null;
 
   return (
     <Modal
@@ -137,7 +136,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               autoComplete="off"
               required
             />
-            {errors.name ? <span className="field-error">{errors.name}</span> : null}
+            {errors.name ? (
+              <span className="field-error">{errors.name}</span>
+            ) : null}
           </label>
 
           <label className="form-field">
@@ -150,7 +151,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               autoComplete="off"
               required
             />
-            {errors.type ? <span className="field-error">{errors.type}</span> : null}
+            {errors.type ? (
+              <span className="field-error">{errors.type}</span>
+            ) : null}
           </label>
 
           <label className="form-field">
@@ -163,7 +166,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               autoComplete="off"
               required
             />
-            {errors.colors ? <span className="field-error">{errors.colors}</span> : null}
+            {errors.colors ? (
+              <span className="field-error">{errors.colors}</span>
+            ) : null}
           </label>
 
           <label className="form-field">
@@ -176,7 +181,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               autoComplete="off"
               required
             />
-            {errors.dimensions ? <span className="field-error">{errors.dimensions}</span> : null}
+            {errors.dimensions ? (
+              <span className="field-error">{errors.dimensions}</span>
+            ) : null}
           </label>
 
           <label className="form-field form-field--full">
@@ -189,7 +196,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               autoComplete="off"
               required
             />
-            {errors.materials ? <span className="field-error">{errors.materials}</span> : null}
+            {errors.materials ? (
+              <span className="field-error">{errors.materials}</span>
+            ) : null}
           </label>
 
           <label className="form-field form-field--full">
@@ -202,7 +211,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               autoComplete="off"
               required
             />
-            {errors.imageUrl ? <span className="field-error">{errors.imageUrl}</span> : null}
+            {errors.imageUrl ? (
+              <span className="field-error">{errors.imageUrl}</span>
+            ) : null}
           </label>
 
           <label className="form-field form-field--full">
@@ -215,12 +226,18 @@ export function EditProductModal({ open, product, onClose, onSave }) {
               rows="4"
               required
             />
-            {errors.description ? <span className="field-error">{errors.description}</span> : null}
+            {errors.description ? (
+              <span className="field-error">{errors.description}</span>
+            ) : null}
           </label>
         </div>
 
         <div className="form-actions">
-          <button className="button button-secondary" type="button" onClick={onClose}>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={onClose}
+          >
             Cancelar
           </button>
           <button className="button button-primary" type="submit">
@@ -229,5 +246,5 @@ export function EditProductModal({ open, product, onClose, onSave }) {
         </div>
       </form>
     </Modal>
-  )
+  );
 }

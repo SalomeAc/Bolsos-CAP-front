@@ -4,18 +4,23 @@ import { EditProductModal } from "../../components/ProductAdmin/EditProductModal
 import { DeleteConfirmationModal } from "../../components/ProductAdmin/DeleteConfirmationModal.jsx";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { useProductsStore } from "../../store/useProductsStore.js";
+import {
+  updateProduct as updateProductApi,
+  deleteProduct as deleteProductApi,
+} from "../../services/productService.js";
 import { Link, useNavigate } from "react-router-dom";
 import "./ProductPage.css";
 
 export function ProductPage({ product }) {
   const navigate = useNavigate();
-  const updateProduct = useProductsStore((state) => state.updateProduct);
-  const deleteProduct = useProductsStore((state) => state.deleteProduct);
+  const updateProductLocal = useProductsStore((state) => state.updateProduct);
+  const deleteProductLocal = useProductsStore((state) => state.deleteProduct);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
 
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [isDeletingModalOpen, setIsDeletingModalOpen] = useState(false);
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!product) {
     return (
@@ -29,19 +34,46 @@ export function ProductPage({ product }) {
     );
   }
 
-  const handleSaveProduct = (updates) => {
-    updateProduct(product.slug, updates);
-    setIsEditingModalOpen(false);
+  const handleSaveProduct = async (updates) => {
+    setIsSaving(true);
+
+    try {
+      if (product._id) {
+        const updatedProduct = await updateProductApi(product._id, {
+          ...product,
+          ...updates,
+        });
+        updateProductLocal(product.slug, updatedProduct);
+      } else {
+        updateProductLocal(product.slug, updates);
+      }
+
+      setIsEditingModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert(`No se pudo actualizar el producto: ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleConfirmDelete = (slug) => {
+  const handleConfirmDelete = async (productToDelete) => {
     setIsDeletingLoading(true);
-    setTimeout(() => {
-      deleteProduct(slug);
+
+    try {
+      if (productToDelete._id) {
+        await deleteProductApi(productToDelete._id);
+      }
+
+      deleteProductLocal(productToDelete.slug);
       setIsDeletingModalOpen(false);
-      setIsDeletingLoading(false);
       navigate("/catalog");
-    }, 300);
+    } catch (error) {
+      console.error(error);
+      alert(`No se pudo eliminar el producto: ${error.message}`);
+    } finally {
+      setIsDeletingLoading(false);
+    }
   };
 
   return (

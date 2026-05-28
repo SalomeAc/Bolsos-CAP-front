@@ -17,6 +17,10 @@ import { products as initialProducts } from '../data/products.js'
 export const useProductsStore = create((set, get) => ({
   products: initialProducts,
 
+  setProducts: (products) => {
+    set({ products })
+  },
+
   addProduct: (product) => {
     set((state) => ({ products: [product, ...state.products] }))
   },
