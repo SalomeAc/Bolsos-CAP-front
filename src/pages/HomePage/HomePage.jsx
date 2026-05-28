@@ -37,7 +37,7 @@ export function HomePage({ products }) {
         </div>
         <div className="product-grid product-grid--featured">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product.code || product._id} product={product} />
           ))}
         </div>
         <div className="hero-actions">
