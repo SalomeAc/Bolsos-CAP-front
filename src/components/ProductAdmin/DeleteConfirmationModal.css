@@ -1,0 +1,57 @@
+.delete-confirmation-content {
+  display: grid;
+  gap: 24px;
+}
+
+.delete-warning {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.delete-warning svg {
+  color: #b00020;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.delete-warning p {
+  margin: 0;
+  color: #2c2438;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.delete-warning p strong {
+  font-weight: 700;
+  color: #2c2438;
+}
+
+.delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.button-danger {
+  background: #b00020;
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 0;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.button-danger:hover:not(:disabled) {
+  background: #7d0014;
+  box-shadow: 0 18px 28px rgba(176, 0, 32, 0.18);
+}
+
+.button-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

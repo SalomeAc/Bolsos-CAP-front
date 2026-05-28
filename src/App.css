@@ -173,6 +173,9 @@
   color: #ffffff;
   padding: 10px 14px;
   border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .header-cta {
@@ -368,6 +371,24 @@
   background: #ffffff;
   color: #2c2438;
   box-shadow: inset 0 0 0 1px #e9def6;
+}
+
+.button-danger {
+  background: #b00020;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-danger:hover:not(:disabled) {
+  background: #7d0014;
+  box-shadow: 0 18px 28px rgba(176, 0, 32, 0.18);
+}
+
+.button-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .hero-panel {
@@ -701,4 +722,5 @@
     padding: 20px;
     border-radius: 22px;
   }
+}
 }
