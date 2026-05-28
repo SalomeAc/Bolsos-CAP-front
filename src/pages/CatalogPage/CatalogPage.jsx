@@ -5,7 +5,7 @@ import { useAuthStore } from "../../store/useAuthStore.js";
 import { useProductsStore } from "../../store/useProductsStore.js";
 import {
   createProduct as createProductApi,
-  fetchProducts
+  fetchProducts,
 } from "../../services/productService.js";
 import "./CatalogPage.css";
 
@@ -13,30 +13,26 @@ export function CatalogPage() {
   const products = useProductsStore((state) => state.products);
   const addProduct = useProductsStore((state) => state.addProduct);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
+  const authToken = useAuthStore((state) => state.authToken);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const setProducts = useProductsStore((state) => state.setProducts);
 
   useEffect(() => {
-
-  async function loadProducts() {
-    try {
-      const data = await fetchProducts();
-      setProducts(data);
-
-    } catch (error) {
-
-      console.error(error);
-
+    async function loadProducts() {
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+      }
     }
-  }
 
-  loadProducts();
-
-}, [setProducts]);
+    loadProducts();
+  }, [setProducts]);
 
   const handleCreateProduct = async (product) => {
     try {
-      const createdProduct = await createProductApi(product);
+      const createdProduct = await createProductApi(product, authToken);
       addProduct(createdProduct);
       setIsModalOpen(false);
     } catch (error) {
