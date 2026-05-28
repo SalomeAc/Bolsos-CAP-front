@@ -1,9 +1,62 @@
-.product-detail-layout {
-  display: grid;
-  grid-template-columns: 0.7fr 1.1fr 0.6fr;
-  gap: 24px;
-  align-items: stretch;
+.product-detail-card-header {
+  display: flex;
+  justify-content: space-between; /* Izquierda y Derecha */
+  align-items: center;            /* Centrados verticalmente entre ellos */
+  width: 100%;
+  gap: 16px;
 }
+
+/* Borramos por completo el comportamiento absoluto anterior */
+.product-detail-admin-toolbar {
+  display: none;
+}
+
+/* El contenedor de los botones ahora se alinea a la derecha */
+.product-detail-admin-inline {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end; /* Los empuja al lado contrario del eyebrow */
+  margin-bottom: -10px;      /* Truco visual para acercar el título y que no quede mucho espacio vacío */
+}
+
+/* Botones estéticos, más compactos y limpios */
+.button-admin-edit, 
+.button-admin-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;         /* Tamaño más pequeño y elegante para la esquina */
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Botón Editar - Sutil con tus colores morados */
+.button-admin-edit {
+  background: #f7f3fb;
+  color: #8668b0;
+  border: 1px solid #e9def6;
+}
+
+.button-admin-edit:hover {
+  background: #8668b0;
+  color: #ffffff;
+}
+
+/* Botón Eliminar - Rojo suave peligro */
+.button-admin-delete {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.button-admin-delete:hover {
+  background: #fca5a5;
+  color: #b91c1c;
+}
+
 
 .product-detail-visual {
   min-height: 420px;
@@ -17,6 +70,14 @@
   font-weight: 800;
   font-size: clamp(3rem, 10vw, 6rem);
   box-shadow: 0 20px 38px rgba(134, 104, 176, 0.14);
+  overflow: hidden;
+}
+
+.product-detail-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .product-detail-card,

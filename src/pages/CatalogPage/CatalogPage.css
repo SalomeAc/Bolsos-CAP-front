@@ -13,6 +13,24 @@
   pointer-events: none;
 }
 
+.catalog-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.catalog-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.catalog-header p {
+  max-width: 640px;
+}
+
 .section-heading {
   display: grid;
   gap: 12px;
