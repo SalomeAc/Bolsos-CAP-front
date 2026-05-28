@@ -14,6 +14,7 @@ export function ProductCard({ product }) {
       <div className="product-card-body">
         <div className="product-meta">
           <span>{product.category}</span>
+          <strong>{product.price}</strong>
         </div>
         <h3>{product.name}</h3>
         <p>{product.description}</p>

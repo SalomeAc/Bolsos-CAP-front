@@ -22,6 +22,7 @@ export function ProfilePage() {
           <ul>
             <li>Nombre: {currentUser?.name || 'pendiente de conexión'}</li>
             <li>Correo: {currentUser?.email || 'pendiente de conexión'}</li>
+            <li>Ciudad: pendiente de conexión</li>
           </ul>
         </article>
         <article className="profile-card">

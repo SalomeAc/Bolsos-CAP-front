@@ -7,6 +7,7 @@ const links = [
   { to: '/', label: 'Inicio', end: true },
   { to: '/catalog', label: 'Catálogo' },
   { to: '/profile', label: 'Perfil' },
+  { to: '/login', label: 'Iniciar sesión' },
 ]
 
 export function Navigation() {
@@ -22,11 +23,7 @@ export function Navigation() {
   return (
     <header className="site-header">
       <Link className="brand" to="/" aria-label="Ir a inicio">
-        <img
-          className="brand-mark"
-          src="/icon.png"
-          alt="Bolsos Cap"
-        />
+        <span className="brand-mark">C</span>
         <span>
           <strong>Bolsos Cap</strong>
           <small>Crochet Artesanal</small>
@@ -48,7 +45,7 @@ export function Navigation() {
 
       <div className="header-session">
         <Link className="header-cta" to="/catalog">
-          Cotiza tu Bolso
+          Ver catálogo
         </Link>
 
         {currentUser ? (
@@ -57,7 +54,7 @@ export function Navigation() {
           </button>
         ) : (
           <Link className="header-login" to="/login">
-            Incia Sesión
+            Entrar
           </Link>
         )}
       </div>
