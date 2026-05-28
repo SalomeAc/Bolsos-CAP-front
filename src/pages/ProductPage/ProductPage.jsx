@@ -17,8 +17,12 @@ export function ProductPage({ product }) {
 
   return (
     <section className="product-detail-layout">
-      <article className="product-detail-visual" aria-hidden="true">
-        <span>{product.name.slice(0, 2).toUpperCase()}</span>
+      <article className="product-detail-visual" aria-hidden={product.image ? 'false' : 'true'}>
+        {product.image ? (
+          <img src={product.image} alt={`Imagen de ${product.name}`} />
+        ) : (
+          <span>{product.name.slice(0, 2).toUpperCase()}</span>
+        )}
       </article>
 
       <article className="product-detail-card">

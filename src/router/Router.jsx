@@ -5,11 +5,12 @@ import { LoginPage } from '../pages/LoginPage/LoginPage.jsx'
 import { NotFoundPage } from '../pages/NotFoundPage/NotFoundPage.jsx'
 import { ProfilePage } from '../pages/ProfilePage/ProfilePage.jsx'
 import { ProductPage } from '../pages/ProductPage/ProductPage.jsx'
-import { products } from '../data/products.js'
+import { useProductsStore } from '../store/useProductsStore.js'
 
 function ProductRoute() {
   const { slug } = useParams()
-  const activeProduct = products.find((product) => product.slug === slug)
+  const getProductBySlug = useProductsStore((state) => state.getProductBySlug)
+  const activeProduct = getProductBySlug(slug)
 
   if (!activeProduct) {
     return <NotFoundPage />
@@ -19,10 +20,12 @@ function ProductRoute() {
 }
 
 export default function Router() {
+  const products = useProductsStore((state) => state.products)
+
   return (
     <Routes>
       <Route path="/" element={<HomePage products={products} />} />
-      <Route path="/catalog" element={<CatalogPage products={products} />} />
+      <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/product/:slug" element={<ProductRoute />} />

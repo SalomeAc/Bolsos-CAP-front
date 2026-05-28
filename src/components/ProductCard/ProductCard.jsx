@@ -5,7 +5,11 @@ export function ProductCard({ product }) {
   return (
     <article className="product-card">
       <div className="product-art" aria-hidden="true">
-        <span>{product.name.slice(0, 2).toUpperCase()}</span>
+        {product.image ? (
+          <img src={product.image} alt={`Imagen de ${product.name}`} />
+        ) : (
+          <span>{product.name.slice(0, 2).toUpperCase()}</span>
+        )}
       </div>
       <div className="product-card-body">
         <div className="product-meta">

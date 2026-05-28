@@ -5,6 +5,7 @@ const fakeGoogleProfile = {
   name: 'Usuario Google',
   email: 'usuario.google@example.com',
   provider: 'google',
+  isAdmin: true,
 }
 
 export const useAuthStore = create(
