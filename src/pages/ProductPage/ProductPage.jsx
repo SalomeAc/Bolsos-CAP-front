@@ -281,5 +281,4 @@ export function ProductPage({ product }) {
       />
     </section>
   );
-  );
 }
