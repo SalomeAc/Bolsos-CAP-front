@@ -19,13 +19,12 @@ function buildProductPayload(product) {
     slug: product.slug,
     name: product.name,
     description: product.description,
-    colors: product.colors,
+    color: product.color,
     dimensions: product.dimensions,
     materials: product.materials,
-    category: product.category,
-    image: product.image,
-    price: product.price,
-    care: product.care,
+    type: product.type,
+    photo: product.photo,
+
   }
 }
 

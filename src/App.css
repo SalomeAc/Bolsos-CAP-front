@@ -269,7 +269,7 @@
 .small { font-size: 0.85rem }
 
 .button-google {
-  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid #000;background:#fff;box-shadow:0 6px 18px rgba(134,104,176,0.06);
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid #a1a1a1;background:#fff;box-shadow:0 6px 18px rgba(134,104,176,0.06);
 }
 
 .divider { text-align:center; color:#9b8aa8; font-weight:700 }

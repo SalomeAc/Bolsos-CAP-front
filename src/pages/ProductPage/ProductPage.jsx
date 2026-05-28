@@ -61,10 +61,11 @@ export function ProductPage({ product }) {
   const updateProductLocal = useProductsStore((state) => state.updateProduct);
   const deleteProductLocal = useProductsStore((state) => state.deleteProduct);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
+  const [isSaving, setIsSaving] = useState(false);
 
   const materialOptions = splitList(product.materials);
   const dimensionOptions = formatDimensions(product.dimensions);
-  const colorOptions = splitList(product.colors);
+  const colorOptions = splitList(product.color);
 
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [isDeletingModalOpen, setIsDeletingModalOpen] = useState(false);
@@ -127,14 +128,29 @@ export function ProductPage({ product }) {
     }
   };
 
+  const getImageUrl = (url) => {
+  if (!url) return "";
+
+  if (url.includes("drive.google.com")) {
+    const match = url.match(/\/d\/(.*?)\//);
+
+    if (match && match[1]) {
+      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    }
+  }
+  console.log(product);
+
+  return url;
+};
+
   return (
     <section className="product-detail-layout">
       <article
         className="product-detail-visual"
-        aria-hidden={product.image ? "false" : "true"}
+        aria-hidden={product.photo ? "false" : "true"}
       >
-        {product.image ? (
-          <img src={product.image} alt={`Imagen de ${product.name}`} />
+        {product.photo ? (
+          <img src={getImageUrl(product.photo)} alt={`Imagen de ${product.name}`} />
         ) : (
           <span>{product.name.slice(0, 2).toUpperCase()}</span>
         )}
