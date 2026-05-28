@@ -128,17 +128,20 @@ export function ProductPage({ product }) {
     }
   };
 
-  const getImageUrl = (url) => {
+const getImageUrl = (url) => {
   if (!url) return "";
 
-  if (url.includes("drive.google.com")) {
-    const match = url.match(/\/d\/(.*?)\//);
-
-    if (match && match[1]) {
-      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-    }
+  // Si ya viene en formato correcto
+  if (url.includes("uc?export=view&id=")) {
+    return url;
   }
-  console.log(product);
+
+  // Links tipo file/d/ID/view
+  const fileMatch = url.match(/\/d\/([^/]+)/);
+
+  if (fileMatch?.[1]) {
+    return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
+  }
 
   return url;
 };
@@ -150,7 +153,14 @@ export function ProductPage({ product }) {
         aria-hidden={product.photo ? "false" : "true"}
       >
         {product.photo ? (
-          <img src={getImageUrl(product.photo)} alt={`Imagen de ${product.name}`} />
+          <img
+  src={getImageUrl(product.photo)}
+  alt={product.name}
+  onError={(e) => {
+    console.log("ERROR CARGANDO:", product.photo);
+    console.log("URL FINAL:", getImageUrl(product.photo));
+  }}
+/>
         ) : (
           <span>{product.name.slice(0, 2).toUpperCase()}</span>
         )}
@@ -158,7 +168,7 @@ export function ProductPage({ product }) {
 
       <article className="product-detail-card">
         <div className="product-detail-card-header">
-          <span className="eyebrow">{product.category}</span>
+          <span className="eyebrow">{product.type}</span>
           {isAdmin && (
             <div className="product-detail-admin-inline">
               <button
