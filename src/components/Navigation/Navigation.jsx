@@ -1,32 +1,38 @@
-import './Navigation.css'
-import { Link, NavLink } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../../store/useAuthStore.js'
+import "./Navigation.css";
+import { Link, NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore.js";
 
-const links = [
-  { to: '/', label: 'Inicio', end: true },
-  { to: '/catalog', label: 'Catálogo' },
-  { to: '/profile', label: 'Perfil' },
-]
+const getNavLinks = (isAdmin) => {
+  const baseLinks = [
+    { to: "/", label: "Inicio", end: true },
+    { to: "/catalog", label: "Catálogo" },
+  ];
+  if (isAdmin) {
+    baseLinks.push({ to: "/admin", label: "Admin" });
+  }
+  return baseLinks;
+};
 
 export function Navigation() {
-  const navigate = useNavigate()
-  const currentUser = useAuthStore((state) => state.currentUser)
-  const logout = useAuthStore((state) => state.logout)
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuthStore((state) => ({
+    currentUser: state.currentUser,
+    logout: state.logout,
+  }));
+  const isAdmin = currentUser?.isAdmin === true;
 
   const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
+    logout();
+    navigate("/");
+  };
+
+  const links = getNavLinks(isAdmin);
 
   return (
     <header className="site-header">
       <Link className="brand" to="/" aria-label="Ir a inicio">
-        <img
-          className="brand-mark"
-          src="/icon.png"
-          alt="Bolsos Cap"
-        />
+        <img className="brand-mark" src="/icon.png" alt="Bolsos Cap" />
         <span>
           <strong>Bolsos Cap</strong>
           <small>Crochet Artesanal</small>
@@ -39,7 +45,7 @@ export function Navigation() {
             key={link.to}
             to={link.to}
             end={link.end}
-            className={({ isActive }) => (isActive ? 'active' : '')}
+            className={({ isActive }) => (isActive ? "active" : "")}
           >
             {link.label}
           </NavLink>
@@ -52,9 +58,18 @@ export function Navigation() {
         </Link>
 
         {currentUser ? (
-          <button className="header-logout" type="button" onClick={handleLogout}>
-            {currentUser.name}
-          </button>
+          <>
+            <span style={{ marginRight: "1rem", fontSize: "0.9rem" }}>
+              {currentUser.firstName || currentUser.name}
+            </span>
+            <button
+              className="header-logout"
+              type="button"
+              onClick={handleLogout}
+            >
+              Cerrar sesión
+            </button>
+          </>
         ) : (
           <Link className="header-login" to="/login">
             Incia Sesión
@@ -62,5 +77,5 @@ export function Navigation() {
         )}
       </div>
     </header>
-  )
+  );
 }

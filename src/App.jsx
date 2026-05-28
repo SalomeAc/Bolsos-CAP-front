@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { HashRouter } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Navigation } from "./components/Navigation/Navigation.jsx";
 import Router from "./router/Router.jsx";
 import { useProductsStore } from "./store/useProductsStore.js";
@@ -8,6 +9,7 @@ import "./App.css";
 
 function App() {
   const setProducts = useProductsStore((state) => state.setProducts);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     fetchProducts()
@@ -25,14 +27,16 @@ function App() {
   }, [setProducts]);
 
   return (
-    <HashRouter>
-      <div className="app-shell">
-        <Navigation />
-        <main className="app-main">
-          <Router />
-        </main>
-      </div>
-    </HashRouter>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <HashRouter>
+        <div className="app-shell">
+          <Navigation />
+          <main className="app-main">
+            <Router />
+          </main>
+        </div>
+      </HashRouter>
+    </GoogleOAuthProvider>
   );
 }
 

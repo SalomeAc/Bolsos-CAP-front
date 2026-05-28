@@ -1,8 +1,13 @@
 import { ProductCard } from "../../components/ProductCard/ProductCard.jsx";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore.js";
 import "./HomePage.css";
 
 export function HomePage({ products }) {
+  const { currentUser } = useAuthStore((state) => ({
+    currentUser: state.currentUser,
+  }));
+  const isAdmin = currentUser?.isAdmin === true;
   const featuredProducts = products.slice(0, 3);
 
   return (
@@ -20,12 +25,30 @@ export function HomePage({ products }) {
             historias.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" to="/catalog">
-              Explorar catálogo
-            </Link>
-            <Link className="button button-secondary" to="/login">
-              Iniciar sesión
-            </Link>
+            {currentUser ? (
+              <>
+                <Link className="button button-primary" to="/catalog">
+                  Ver catálogo
+                </Link>
+                <Link className="button button-secondary" to="/profile">
+                  Mi perfil
+                </Link>
+                {isAdmin && (
+                  <Link className="button button-secondary" to="/admin">
+                    Dashboard Admin
+                  </Link>
+                )}
+              </>
+            ) : (
+              <>
+                <Link className="button button-primary" to="/catalog">
+                  Explorar catálogo
+                </Link>
+                <Link className="button button-secondary" to="/login">
+                  Iniciar sesión
+                </Link>
+              </>
+            )}
           </div>
         </aside>
       </section>

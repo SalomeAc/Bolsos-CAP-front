@@ -1,26 +1,30 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-const fakeGoogleProfile = {
-  name: 'Usuario Google',
-  email: 'usuario.google@example.com',
-  provider: 'google',
-  isAdmin: true,
-}
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export const useAuthStore = create(
   persist(
     (set) => ({
       currentUser: null,
-      signInWithGoogle: () => {
-        set({ currentUser: fakeGoogleProfile })
-        return fakeGoogleProfile
+      token: null,
+
+      setUser: (user, token) => {
+        set({ currentUser: user, token });
       },
-      logout: () => set({ currentUser: null }),
+
+      logout: () => {
+        set({ currentUser: null, token: null });
+      },
+
+      setToken: (token) => {
+        set({ token });
+      },
     }),
     {
-      name: 'bolsoscap-auth',
-      partialize: (state) => ({ currentUser: state.currentUser }),
+      name: "bolsoscap-auth",
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+        token: state.token,
+      }),
     },
   ),
-)
+);
