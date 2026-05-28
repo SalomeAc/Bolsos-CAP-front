@@ -158,6 +158,38 @@
   outline-offset: 3px;
 }
 
+.choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-pill {
+  appearance: none;
+  border: 1px solid #e0d2f1;
+  background: #ffffff;
+  color: #2c2438;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.choice-pill:hover {
+  border-color: #8668b0;
+  transform: translateY(-1px);
+}
+
+.choice-pill.is-selected {
+  background: #8668b0;
+  color: #ffffff;
+  border-color: #8668b0;
+  box-shadow: 0 10px 20px rgba(134, 104, 176, 0.18);
+}
+
 .product-dropdown summary {
   cursor: pointer;
   list-style: none;
@@ -208,28 +240,42 @@
 }
 
 .color-swatch {
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid #e0d2f1;
+  border-radius: 999px;
+  background: #ffffff;
   cursor: pointer;
   box-shadow: 0 8px 16px rgba(134, 104, 176, 0.08);
 }
 
 .color-swatch-chip {
   display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.color-swatch-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c2438;
+  white-space: nowrap;
 }
 
 .color-swatch.is-selected {
   border-color: #8668b0;
   box-shadow: 0 10px 20px rgba(134, 104, 176, 0.18);
   transform: translateY(-1px);
+}
+
+.color-swatch.is-selected .color-swatch-label {
+  color: #8668b0;
 }
 
 .color-swatch:focus-visible {
@@ -241,6 +287,16 @@
   margin: 0;
   font-size: 0.95rem;
   color: #2c2438;
+}
+
+.selection-empty-state {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed #d7c9ea;
+  background: #ffffff;
+  color: #6f5a89;
+  font-size: 0.95rem;
 }
 
 .product-care p {
