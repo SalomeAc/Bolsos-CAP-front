@@ -26,6 +26,10 @@ function App() {
       });
   }, [setProducts]);
 
+  if (!googleClientId) {
+    return <div>Error: Google Client ID no configurado</div>;
+  }
+
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <HashRouter>

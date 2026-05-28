@@ -4,9 +4,7 @@ import { useAuthStore } from "../../store/useAuthStore.js";
 import "./HomePage.css";
 
 export function HomePage({ products }) {
-  const { currentUser } = useAuthStore((state) => ({
-    currentUser: state.currentUser,
-  }));
+  const currentUser = useAuthStore((state) => state.currentUser);
   const isAdmin = currentUser?.isAdmin === true;
   const featuredProducts = products.slice(0, 3);
 
@@ -60,7 +58,7 @@ export function HomePage({ products }) {
         </div>
         <div className="product-grid product-grid--featured">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product._id} product={product} />
           ))}
         </div>
         <div className="hero-actions">

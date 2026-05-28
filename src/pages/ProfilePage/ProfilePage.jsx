@@ -9,14 +9,10 @@ import "./ProfilePage.css";
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { currentUser, token } = useAuthStore((state) => ({
-    currentUser: state.currentUser,
-    token: state.token,
-  }));
-  const { logout, setUser } = useAuthStore((state) => ({
-    logout: state.logout,
-    setUser: state.setUser,
-  }));
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const token = useAuthStore((state) => state.token);
+  const logout = useAuthStore((state) => state.logout);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

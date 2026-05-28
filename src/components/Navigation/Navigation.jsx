@@ -16,10 +16,8 @@ const getNavLinks = (isAdmin) => {
 
 export function Navigation() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuthStore((state) => ({
-    currentUser: state.currentUser,
-    logout: state.logout,
-  }));
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const logout = useAuthStore((state) => state.logout);
   const isAdmin = currentUser?.isAdmin === true;
 
   const handleLogout = () => {
