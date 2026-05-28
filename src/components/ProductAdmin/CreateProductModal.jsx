@@ -22,15 +22,6 @@ const initialErrors = {
   photo: "",
 };
 
-function slugify(value) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-");
-}
-
 function isValidUrl(value) {
   try {
     const url = new URL(value);
@@ -115,9 +106,7 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       return;
     }
 
-    const slug = slugify(formState.name);
     const newProduct = {
-      slug: slug || `producto-${Date.now()}`,
       name: formState.name.trim(),
       description: formState.description.trim(),
       color: formState.color.trim(),

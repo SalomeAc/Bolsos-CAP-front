@@ -16,12 +16,23 @@ async function handleResponse(response) {
 
 function buildProductPayload(product) {
   return {
-    slug: product.slug,
     name: product.name,
     description: product.description,
-    color: product.color,
-    dimensions: product.dimensions,
-    materials: product.materials,
+    color: Array.isArray(product.color)
+      ? product.color
+      : product.color
+      ? String(product.color).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
+    dimensions: Array.isArray(product.dimensions)
+      ? product.dimensions
+      : product.dimensions
+      ? String(product.dimensions).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
+    materials: Array.isArray(product.materials)
+      ? product.materials
+      : product.materials
+      ? String(product.materials).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
     type: product.type,
     photo: product.photo,
 

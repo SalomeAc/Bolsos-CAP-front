@@ -16,7 +16,7 @@ export function HomePage({ products }) {
           <span className="eyebrow">Accesorios artesanales</span>
           <h1>Bolsos en crochet hechos para destacar cada salida.</h1>
           <p>
-            Hecho a mano. Texturas cálidas y piezas únicas — diseños que cuentan
+            Hecho a mano. Texturas cálidas y piezas únicas - diseños que cuentan
             historias.
           </p>
           <div className="hero-actions">

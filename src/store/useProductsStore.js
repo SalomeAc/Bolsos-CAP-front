@@ -28,18 +28,22 @@ export const useProductsStore = create((set, get) => ({
   updateProduct: (slug, updates) => {
     set((state) => ({
       products: state.products.map((product) =>
-        product.slug === slug ? { ...product, ...updates } : product
+        (product.slug === slug || product.code === slug) ? { ...product, ...updates } : product
       ),
     }))
   },
 
   deleteProduct: (slug) => {
     set((state) => ({
-      products: state.products.filter((product) => product.slug !== slug),
+      products: state.products.filter((product) => (product.slug || product.code) !== slug),
     }))
   },
 
   getProductBySlug: (slug) => {
     return get().products.find((product) => product.slug === slug)
+  },
+
+  getProductByCode: (code) => {
+    return get().products.find((product) => product.code === code)
   },
 }))
