@@ -86,6 +86,8 @@ export function ProductPage({ product }) {
   }
 
   const handleSaveProduct = async (updates) => {
+    setIsSaving(true);
+
     try {
       if (product._id) {
         const updatedProduct = await updateProductApi(product._id, {
@@ -101,6 +103,8 @@ export function ProductPage({ product }) {
     } catch (error) {
       console.error(error);
       alert(`No se pudo actualizar el producto: ${error.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -276,5 +280,6 @@ export function ProductPage({ product }) {
         isLoading={isDeletingLoading}
       />
     </section>
+  );
   );
 }
