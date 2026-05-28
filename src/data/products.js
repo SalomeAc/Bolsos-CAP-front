@@ -47,4 +47,16 @@ export const products = [
     dimensions: '18 x 22 x 18 cm',
     care: 'Limpiar con cepillo suave y almacenar en bolsa de tela.',
   },
+  {
+    slug: 'prueba',
+    name: 'Prueba',
+    price: 'S/ 98',
+    category: 'Prueba',
+    description:
+      'Bolso con estructura tipo cubeta y estética delicada, ideal para un look fresco y artesanal.',
+    materials: 'Algodón trenzado, cordón ajustable y base firme.',
+    colors: 'Rosa polvo, vainilla y oliva.',
+    dimensions: '18 x 22 x 18 cm',
+    care: 'Limpiar con cepillo suave y almacenar en bolsa de tela.',
+  },
 ]
