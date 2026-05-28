@@ -42,7 +42,7 @@ export function HomePage({ products }) {
         </div>
         <div className="hero-actions">
           <Link className="button button-secondary" to="/catalog">
-            Seguir explorando
+            +
           </Link>
         </div>
       </section>

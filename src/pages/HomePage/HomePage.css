@@ -9,19 +9,11 @@
   justify-content: center;
 }
 
-.hero-grid {
+.page-stack > .hero-grid {
   display: grid;
-  /* force explicit percentages to ensure left column is smaller */
-  grid-template-columns: 35% 65% !important;
   gap: 24px;
   align-items: stretch;
-}
-
-/* Ensure hero grid matches the page content width and is centered like other sections */
-.hero-grid {
-  width: 100%;
-  max-width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
+  grid-template-columns: 0.6fr 1.4fr !important;
 }
 
 .hero-copy,
@@ -44,9 +36,15 @@
   display: grid;
   gap: 18px;
   align-content: center;
-  min-height: 420px;
+  min-height: 360px;
   position: relative;
   overflow: hidden;
+}
+
+.hero-copy img {
+  width: min(100%, 320px);
+  height: auto;
+  justify-self: center;
 }
 
 .hero-copy::after {
@@ -64,7 +62,7 @@
   margin: 0;
   font-family: var(--heading);
   color: #2c2438;
-  font-size: clamp(2.2rem, 5vw, 3rem);
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
   line-height: 1.03;
   letter-spacing: -0.02em;
 }
@@ -113,7 +111,7 @@
   /* match spacing with .hero-copy: same gap, align and min-height */
   gap: 18px;
   align-content: center;
-  min-height: 420px;
+  min-height: 360px;
   background: linear-gradient(160deg, #8668b0, #9d7fc4), #8668b0;
   color: #ffffff;
   position: relative;
@@ -125,7 +123,7 @@
   /* use same serif heading, size and spacing as .hero-copy h1 */
   font-family: var(--heading);
   color: inherit;
-  font-size: clamp(2.2rem, 5vw, 3rem);
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
   line-height: 1.03;
   letter-spacing: -0.02em;
   margin: 0;
@@ -209,7 +207,7 @@
 }
 
 @media (max-width: 1024px) {
-  .hero-grid,
+  .page-stack > .hero-grid,
   .product-grid,
   .product-grid--featured {
     grid-template-columns: 1fr;
