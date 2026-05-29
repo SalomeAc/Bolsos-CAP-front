@@ -16,12 +16,23 @@ async function handleResponse(response) {
 
 function buildProductPayload(product) {
   return {
-    slug: product.slug,
     name: product.name,
     description: product.description,
-    color: product.color,
-    dimensions: product.dimensions,
-    materials: product.materials,
+    color: Array.isArray(product.color)
+      ? product.color
+      : product.color
+      ? String(product.color).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
+    dimensions: Array.isArray(product.dimensions)
+      ? product.dimensions
+      : product.dimensions
+      ? String(product.dimensions).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
+    materials: Array.isArray(product.materials)
+      ? product.materials
+      : product.materials
+      ? String(product.materials).split(",").map((s) => s.trim()).filter(Boolean)
+      : [],
     type: product.type,
     photo: product.photo,
 
@@ -33,11 +44,12 @@ export async function fetchProducts() {
   return handleResponse(response)
 }
 
-export async function createProduct(product) {
+export async function createProduct(product, token) {
   const response = await fetch(`${API_BASE_URL}/api/products`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(buildProductPayload(product)),
   })
@@ -45,11 +57,12 @@ export async function createProduct(product) {
   return handleResponse(response)
 }
 
-export async function updateProduct(productId, product) {
+export async function updateProduct(productId, product, token) {
   const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(buildProductPayload(product)),
   })
@@ -57,9 +70,12 @@ export async function updateProduct(productId, product) {
   return handleResponse(response)
 }
 
-export async function deleteProduct(productId) {
+export async function deleteProduct(productId, token) {
   const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
     method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
   })
 
   return handleResponse(response)

@@ -10,50 +10,120 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import "./ProductPage.css";
 
-const splitList = (value) =>
-  value
+const splitList = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) => (Array.isArray(item) ? item : [item]))
+      .map((v) => String(v).trim())
+      .filter(Boolean);
+  }
+  return String(value)
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+};
+
+const mergeLists = (...values) =>
+  values.flatMap((value) => splitList(value)).filter(Boolean);
 
 const formatDimensions = (value) => {
-  const [width, height, depth] = value.replace(/\s*cm\s*$/i, "").split("x").map((part) => part.trim());
+  // value can be an array of dimension strings or a single string like '20 x 15 x 6 cm'
+  const toParts = (v) => {
+    if (!v) return [];
+    const cleaned = String(v).replace(/\s*cm\s*$/i, "");
+    const [width, height, depth] = cleaned
+      .split("x")
+      .map((part) => part.trim());
+    return [
+      width ? `Ancho: ${width} cm` : null,
+      height ? `Alto: ${height} cm` : null,
+      depth ? `Fondo: ${depth} cm` : null,
+    ].filter(Boolean);
+  };
 
-  return [
-    width ? `Ancho: ${width} cm` : null,
-    height ? `Alto: ${height} cm` : null,
-    depth ? `Fondo: ${depth} cm` : null,
-  ].filter(Boolean);
+  if (Array.isArray(value)) {
+    return value.map((v) => toParts(v).join(" — "));
+  }
+
+  return toParts(value);
 };
 
 const formatDimensionLabel = (value) => {
-  const match = value.match(/^([0-9]+(?:\.[0-9]+)?)\s*(cm)?$/i);
+  const normalizedValue = Array.isArray(value)
+    ? value.join(" x ")
+    : String(value);
+  const match = normalizedValue.match(/^([0-9]+(?:\.[0-9]+)?)\s*(cm)?$/i);
 
   if (match) {
     return `${match[1]} cm`;
   }
 
-  return value;
+  return normalizedValue;
 };
 
 const getColorHex = (colorName) => {
-  const normalized = colorName.toLowerCase();
+  const normalized = String(
+    Array.isArray(colorName) ? colorName.join(" ") : colorName,
+  )
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
-  if (normalized.includes("arena")) return "#d7c4aa";
-  if (normalized.includes("crema")) return "#f4eadf";
-  if (normalized.includes("terracota")) return "#c96d4f";
-  if (normalized.includes("cacao")) return "#7b4a2b";
-  if (normalized.includes("verde")) return "#8cab75";
-  if (normalized.includes("salvia")) return "#a6b88e";
-  if (normalized.includes("beige")) return "#ead8bb";
-  if (normalized.includes("dorado")) return "#d9b85f";
-  if (normalized.includes("moka")) return "#8c6145";
-  if (normalized.includes("rosa")) return "#d9a7bc";
-  if (normalized.includes("polvo")) return "#e0b9cf";
-  if (normalized.includes("vainilla")) return "#f4e5b8";
-  if (normalized.includes("oliva")) return "#8f9457";
+  const colorMap = {
+    negro: "#000000",
+    blanco: "#ffffff",
+    gris: "#808080",
+    plata: "#c0c0c0",
+    azul: "#1f5aa6",
+    celeste: "#8ecae6",
+    rojo: "#d62828",
+    naranja: "#f77f00",
+    amarillo: "#fcbf49",
+    verde: "#2f855a",
+    marron: "#7b4a2b",
+    cafe: "#7b4a2b",
+    cacao: "#7b4a2b",
+    beige: "#ead8bb",
+    crema: "#f4eadf",
+    arena: "#d7c4aa",
+    terracota: "#c96d4f",
+    dorado: "#d9b85f",
+    moka: "#8c6145",
+    rosa: "#d9a7bc",
+    polvo: "#e0b9cf",
+    vainilla: "#f4e5b8",
+    oliva: "#8f9457",
+    salvia: "#a6b88e",
+    lila: "#a299c1",
+  };
 
-  return "#b49bcf";
+  const exactMatch = colorMap[normalized];
+  if (exactMatch) return exactMatch;
+
+  if (normalized.includes("arena")) return colorMap.arena;
+  if (normalized.includes("crema")) return colorMap.crema;
+  if (normalized.includes("terracota")) return colorMap.terracota;
+  if (normalized.includes("cacao")) return colorMap.cacao;
+  if (normalized.includes("verde")) return colorMap.verde;
+  if (normalized.includes("salvia")) return colorMap.salvia;
+  if (normalized.includes("beige")) return colorMap.beige;
+  if (normalized.includes("dorado")) return colorMap.dorado;
+  if (normalized.includes("moka")) return colorMap.moka;
+  if (normalized.includes("rosa")) return colorMap.rosa;
+  if (normalized.includes("polvo")) return colorMap.polvo;
+  if (normalized.includes("vainilla")) return colorMap.vainilla;
+  if (normalized.includes("oliva")) return colorMap.oliva;
+
+  return "#b8b8b8";
+};
+
+const getColorText = (colorName) => {
+  if (Array.isArray(colorName)) {
+    return colorName.filter(Boolean).join(", ");
+  }
+
+  return String(colorName || "");
 };
 
 export function ProductPage({ product }) {
@@ -61,17 +131,28 @@ export function ProductPage({ product }) {
   const updateProductLocal = useProductsStore((state) => state.updateProduct);
   const deleteProductLocal = useProductsStore((state) => state.deleteProduct);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
+  const authToken = useAuthStore((state) => state.authToken);
   const [isSaving, setIsSaving] = useState(false);
 
+  console.log("PRODUCT RAW:", product);
+
   const materialOptions = splitList(product.materials);
-  const dimensionOptions = formatDimensions(product.dimensions);
-  const colorOptions = splitList(product.color);
+  const dimensionOptions = splitList(product.dimensions || product.dimension);
+  console.log(
+    "DIMENSION OPTIONS RAW:",
+    product.dimensions || product.dimension,
+  );
+  const colorOptions = mergeLists(product.color, product.colors);
 
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [isDeletingModalOpen, setIsDeletingModalOpen] = useState(false);
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState(materialOptions[0] ?? "");
-  const [selectedDimension, setSelectedDimension] = useState(dimensionOptions[0] ?? "");
+  const [selectedMaterial, setSelectedMaterial] = useState(
+    materialOptions[0] ?? "",
+  );
+  const [selectedDimension, setSelectedDimension] = useState(
+    dimensionOptions[0] ?? "",
+  );
   const [selectedColor, setSelectedColor] = useState(colorOptions[0] ?? "");
 
   if (!product) {
@@ -91,13 +172,17 @@ export function ProductPage({ product }) {
 
     try {
       if (product._id) {
-        const updatedProduct = await updateProductApi(product._id, {
-          ...product,
-          ...updates,
-        });
-        updateProductLocal(product.slug, updatedProduct);
+        const updatedProduct = await updateProductApi(
+          product._id,
+          {
+            ...product,
+            ...updates,
+          },
+          authToken,
+        );
+        updateProductLocal(product.code || product._id, updatedProduct);
       } else {
-        updateProductLocal(product.slug, updates);
+        updateProductLocal(product.code || product._id, updates);
       }
 
       setIsEditingModalOpen(false);
@@ -114,10 +199,10 @@ export function ProductPage({ product }) {
 
     try {
       if (productToDelete._id) {
-        await deleteProductApi(productToDelete._id);
+        await deleteProductApi(productToDelete._id, authToken);
       }
 
-      deleteProductLocal(productToDelete.slug);
+      deleteProductLocal(productToDelete.code || productToDelete._id);
       setIsDeletingModalOpen(false);
       navigate("/catalog");
     } catch (error) {
@@ -128,23 +213,23 @@ export function ProductPage({ product }) {
     }
   };
 
-const getImageUrl = (url) => {
-  if (!url) return "";
+  const getImageUrl = (url) => {
+    if (!url) return "";
 
-  // Si ya viene en formato correcto
-  if (url.includes("uc?export=view&id=")) {
+    // Si ya viene en formato correcto
+    if (url.includes("uc?export=view&id=")) {
+      return url;
+    }
+
+    // Links tipo file/d/ID/view
+    const fileMatch = url.match(/\/d\/([^/]+)/);
+
+    if (fileMatch?.[1]) {
+      return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
+    }
+
     return url;
-  }
-
-  // Links tipo file/d/ID/view
-  const fileMatch = url.match(/\/d\/([^/]+)/);
-
-  if (fileMatch?.[1]) {
-    return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
-  }
-
-  return url;
-};
+  };
 
   return (
     <section className="product-detail-layout">
@@ -154,13 +239,13 @@ const getImageUrl = (url) => {
       >
         {product.photo ? (
           <img
-  src={getImageUrl(product.photo)}
-  alt={product.name}
-  onError={(e) => {
-    console.log("ERROR CARGANDO:", product.photo);
-    console.log("URL FINAL:", getImageUrl(product.photo));
-  }}
-/>
+            src={getImageUrl(product.photo)}
+            alt={product.name}
+            onError={(e) => {
+              console.log("ERROR CARGANDO:", product.photo);
+              console.log("URL FINAL:", getImageUrl(product.photo));
+            }}
+          />
         ) : (
           <span>{product.name.slice(0, 2).toUpperCase()}</span>
         )}
@@ -210,7 +295,9 @@ const getImageUrl = (url) => {
           )}
         </div>
         <h1>{product.name}</h1>
-        <p className="product-code">Código: {(product.slug || product._id || "producto").toUpperCase()}</p>
+        <p className="product-code">
+          Código: {(product.code || product._id || "producto").toUpperCase()}
+        </p>
         <p>{product.description}</p>
 
         <div className="product-options">
@@ -233,7 +320,10 @@ const getImageUrl = (url) => {
           </div>
 
           <div className="product-dropdown">
-            <label className="product-dropdown-label" htmlFor="dimension-select">
+            <label
+              className="product-dropdown-label"
+              htmlFor="dimension-select"
+            >
               Dimensiones
             </label>
             <select
@@ -242,52 +332,109 @@ const getImageUrl = (url) => {
               value={selectedDimension}
               onChange={(event) => setSelectedDimension(event.target.value)}
             >
-              {dimensionOptions.map((dimension) => (
-                <option key={dimension} value={dimension}>
-                  {formatDimensionLabel(dimension)}
-                </option>
-              ))}
+              {dimensionOptions.map((dimension) => {
+                const dimensionValue = Array.isArray(dimension)
+                  ? dimension.join(" x ")
+                  : String(dimension);
+
+                return (
+                  <option key={dimensionValue} value={dimensionValue}>
+                    {formatDimensionLabel(dimensionValue)}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
           <div className="product-color-picker">
             <span className="product-dropdown-label">Color</span>
-            <div className="color-swatches" role="list" aria-label="Colores disponibles">
-              {colorOptions.map((color) => {
-                const isSelected = selectedColor === color;
+            {colorOptions.length > 0 ? (
+              <>
+                <div
+                  className="color-swatches"
+                  role="list"
+                  aria-label="Colores disponibles"
+                >
+                  {colorOptions.map((color) => {
+                    const colorLabel = getColorText(color);
+                    const isSelected = selectedColor === colorLabel;
 
-                return (
-                  <button
-                    key={color}
-                    type="button"
-                    className={`color-swatch${isSelected ? " is-selected" : ""}`}
-                    onClick={() => setSelectedColor(color)}
-                    aria-label={`Seleccionar color ${color}`}
-                    aria-pressed={isSelected}
-                    title={color}
-                  >
-                    <span
-                      className="color-swatch-chip"
-                      style={{ backgroundColor: getColorHex(color) }}
-                      aria-hidden="true"
-                    />
-                  </button>
-                );
-              })}
-            </div>
-            <p className="selected-color-label">{selectedColor}</p>
-          </div>
-
-          <div className="product-care">
-            <span className="product-dropdown-label">Cuidado</span>
-            <p>{product.care}</p>
+                    return (
+                      <button
+                        key={colorLabel}
+                        type="button"
+                        className={`color-swatch color-swatch--labeled${isSelected ? " is-selected" : ""}`}
+                        onClick={() => {
+                          setSelectedColor(colorLabel);
+                        }}
+                        aria-label={`Seleccionar color ${colorLabel}`}
+                        aria-pressed={isSelected}
+                        title={colorLabel}
+                      >
+                        <span
+                          className="color-swatch-chip"
+                          style={{ backgroundColor: getColorHex(colorLabel) }}
+                          aria-hidden="true"
+                        />
+                        <span className="color-swatch-label">{colorLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="selected-color-label">
+                  {selectedColor || colorOptions[0]}
+                </p>
+              </>
+            ) : (
+              <p className="selection-empty-state">
+                No hay colores disponibles.
+              </p>
+            )}
           </div>
         </div>
 
         <div className="hero-actions">
-          <Link className="button button-primary" to="/catalog">
-            Cotizar
-          </Link>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+                return;
+              }
+
+              navigate("/catalog");
+            }}
+          >
+            Volver
+          </button>
+          <button
+            className="button button-primary"
+            type="button"
+            onClick={() => {
+              const payload = {
+                code: product.code || product._id,
+                name: product.name,
+                type: product.type,
+                selectedMaterial,
+                selectedDimension,
+                selectedColor: selectedColor || colorOptions[0] || "",
+              };
+
+              if (!authToken) {
+                navigate("/login");
+                return;
+              }
+
+              navigate("/quotation-summary", {
+                state: {
+                  summary: payload,
+                },
+              });
+            }}
+          >
+            Realizar cotización
+          </button>
         </div>
       </article>
 

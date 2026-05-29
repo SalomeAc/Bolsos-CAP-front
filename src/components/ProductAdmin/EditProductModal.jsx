@@ -41,9 +41,9 @@ export function EditProductModal({ open, product, onClose, onSave }) {
     setFormState({
       name: product.name || "",
       description: product.description || "",
-      color: product.color || "",
-      dimensions: product.dimensions || "",
-      materials: product.materials || "",
+      color: Array.isArray(product.color) ? product.color.join(", ") : product.color || "",
+      dimensions: Array.isArray(product.dimensions) ? product.dimensions.join(", ") : product.dimensions || "",
+      materials: Array.isArray(product.materials) ? product.materials.join(", ") : product.materials || "",
       type: product.type || "",
       photo: product.photo || "",
     });

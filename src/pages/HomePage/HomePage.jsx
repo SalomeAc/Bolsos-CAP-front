@@ -19,7 +19,7 @@ export function HomePage({ products }) {
           <span className="eyebrow">Accesorios artesanales</span>
           <h1>Bolsos en crochet hechos para destacar cada salida.</h1>
           <p>
-            Hecho a mano. Texturas cálidas y piezas únicas — diseños que cuentan
+            Hecho a mano. Texturas cálidas y piezas únicas - diseños que cuentan
             historias.
           </p>
           <div className="hero-actions">
@@ -58,7 +58,7 @@ export function HomePage({ products }) {
         </div>
         <div className="product-grid product-grid--featured">
           {featuredProducts.map((product) => (
-            <ProductCard key={product._id} product={product} />
+            <ProductCard key={product.code || product._id} product={product} />
           ))}
         </div>
         <div className="hero-actions">

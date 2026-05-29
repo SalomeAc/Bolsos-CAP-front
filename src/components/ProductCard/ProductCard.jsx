@@ -39,7 +39,7 @@ console.log(getImageUrl(product.photo));
         </div>
         <h3>{product.name}</h3>
         <p>{product.description}</p>
-        <Link to={`/product/${product._id}`}>Ver producto</Link>
+        <Link to={`/product/${product.code}`}>Ver producto</Link>
       </div>
     </article>
   )

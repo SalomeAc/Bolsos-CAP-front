@@ -4,13 +4,14 @@ import { HomePage } from '../pages/HomePage/HomePage.jsx'
 import { LoginPage } from '../pages/LoginPage/LoginPage.jsx'
 import { NotFoundPage } from '../pages/NotFoundPage/NotFoundPage.jsx'
 import { ProfilePage } from '../pages/ProfilePage/ProfilePage.jsx'
+import { QuotationSummaryPage } from '../pages/QuotationSummaryPage/QuotationSummaryPage.jsx'
 import { ProductPage } from '../pages/ProductPage/ProductPage.jsx'
 import { useProductsStore } from '../store/useProductsStore.js'
 
 function ProductRoute() {
-  const { slug } = useParams()
-  const getProductBySlug = useProductsStore((state) => state.getProductBySlug)
-  const activeProduct = getProductBySlug(slug)
+  const { code } = useParams()
+  const getProductByCode = useProductsStore((state) => state.getProductByCode)
+  const activeProduct = getProductByCode(code)
 
   if (!activeProduct) {
     return <NotFoundPage />
@@ -28,7 +29,8 @@ export default function Router() {
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/product/:slug" element={<ProductRoute />} />
+      <Route path="/quotation-summary" element={<QuotationSummaryPage />} />
+      <Route path="/product/:code" element={<ProductRoute />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
