@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import './LoginPage.css'
@@ -8,7 +8,10 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
   const signInWithGoogle = useAuthStore((state) => state.signInWithGoogle)
+  const setReturnPath = useAuthStore((state) => state.setReturnPath)
+  const returnPath = useAuthStore((state) => state.returnPath)
 
   const handleGoogleSuccess = async (credentialResponse) => {
     const credential = credentialResponse?.credential
@@ -23,7 +26,11 @@ export function LoginPage() {
 
     try {
       await signInWithGoogle(credential)
-      navigate('/profile', { replace: true })
+      
+      // Redirigir a la página anterior o al home
+      const redirectTo = returnPath || location.state?.from?.pathname || '/'
+      setReturnPath(null) // Limpiar el returnPath después de usarlo
+      navigate(redirectTo, { replace: true })
     } catch (error) {
       setErrorMessage(error.message || 'No se pudo iniciar sesión con Google.')
     } finally {

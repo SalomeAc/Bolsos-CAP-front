@@ -9,7 +9,9 @@ const getNavLinks = (isAdmin) => {
     { to: "/catalog", label: "Catálogo" },
   ];
   if (isAdmin) {
-    baseLinks.push({ to: "/admin", label: "Admin" });
+    baseLinks.push({ to: "/cotizaciones", label: "Cotizaciones" });
+  } else {
+    baseLinks.push({ to: "/mis-cotizaciones", label: "Mis Cotizaciones" });
   }
   return baseLinks;
 };
@@ -51,9 +53,11 @@ export function Navigation() {
       </nav>
 
       <div className="header-session">
-        <Link className="header-cta" to="/catalog">
-          Cotiza tu Bolso
-        </Link>
+        {!isAdmin && (
+          <Link className="header-cta" to="/catalog">
+            Cotiza tu Bolso
+          </Link>
+        )}
 
         {currentUser ? (
           <>

@@ -1,0 +1,274 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getAllQuotations } from '../../services/quotationService'
+import { useAuthStore } from '../../store/useAuthStore'
+import './AdminMessagesPage.css'
+
+export function AdminMessagesPage() {
+  const navigate = useNavigate()
+  const token = useAuthStore((state) => state.authToken)
+  const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin)
+  const [quotations, setQuotations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [filter, setFilter] = useState('all') // all, pending, quoted, accepted
+  const [searchTerm, setSearchTerm] = useState('')
+
+  // Verificar que el usuario es administrador
+  useEffect(() => {
+    if (!userIsAdmin) {
+      navigate('/')
+    }
+  }, [userIsAdmin, navigate])
+
+  // Cargar todas las cotizaciones
+  useEffect(() => {
+    if (!token || !userIsAdmin) return
+
+    const loadQuotations = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await getAllQuotations(token)
+        setQuotations(data)
+      } catch (err) {
+        console.error('Error loading quotations:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadQuotations()
+
+    // Poll cada 10 segundos
+    const interval = setInterval(loadQuotations, 10000)
+    return () => clearInterval(interval)
+  }, [token, userIsAdmin])
+
+  // Filtrar cotizaciones
+  const getFilteredQuotations = () => {
+    let filtered = quotations
+
+    // Filtro por estado
+    if (filter === 'pending') {
+      filtered = filtered.filter(q => q.status === 'pendiente')
+    } else if (filter === 'quoted') {
+      filtered = filtered.filter(q => q.status === 'cotizada')
+    } else if (filter === 'accepted') {
+      filtered = filtered.filter(q => q.status === 'aceptada')
+    }
+
+    // Filtro por búsqueda
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase()
+      filtered = filtered.filter(q => {
+        const userName = q.user?.firstName?.toLowerCase() || ''
+        const userEmail = q.user?.email?.toLowerCase() || ''
+        const code = q.product?.code?.toLowerCase() || ''
+        return (
+          userName.includes(search) ||
+          userEmail.includes(search) ||
+          code.includes(search) ||
+          q._id.includes(search)
+        )
+      })
+    }
+
+    return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+
+  const filteredQuotations = getFilteredQuotations()
+  const pendingCount = quotations.filter(q => q.status === 'pendiente').length
+  const quotedCount = quotations.filter(q => q.status === 'cotizada').length
+  const acceptedCount = quotations.filter(q => q.status === 'aceptada').length
+
+  if (loading) {
+    return (
+      <section className="admin-messages-loading">
+        <div className="spinner"></div>
+        <p>Cargando cotizaciones...</p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="admin-messages-page">
+      <div className="admin-messages-header">
+        <div>
+          <span className="eyebrow">Centro de Mensajes</span>
+          <h1>Gestión de Cotizaciones</h1>
+          <p>Comunicación en tiempo real con clientes</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="admin-error-banner">
+          <span>{error}</span>
+          <button onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div className="stats-cards">
+        <div className="stat-card">
+          <span className="stat-label">Pendientes</span>
+          <span className="stat-value">{pendingCount}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Cotizadas</span>
+          <span className="stat-value">{quotedCount}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Aceptadas</span>
+          <span className="stat-value">{acceptedCount}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Total</span>
+          <span className="stat-value">{quotations.length}</span>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-section">
+        <div className="filter-group">
+          <input
+            type="text"
+            placeholder="Buscar por cliente, email, código..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+        <div className="filter-tabs">
+          <button
+            className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            Todas ({quotations.length})
+          </button>
+          <button
+            className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
+            onClick={() => setFilter('pending')}
+          >
+            Pendientes ({pendingCount})
+          </button>
+          <button
+            className={`filter-tab ${filter === 'quoted' ? 'active' : ''}`}
+            onClick={() => setFilter('quoted')}
+          >
+            Cotizadas ({quotedCount})
+          </button>
+          <button
+            className={`filter-tab ${filter === 'accepted' ? 'active' : ''}`}
+            onClick={() => setFilter('accepted')}
+          >
+            Aceptadas ({acceptedCount})
+          </button>
+        </div>
+      </div>
+
+      {/* Quotations List */}
+      <div className="quotations-list">
+        {filteredQuotations.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">📭</span>
+            <h2>No hay cotizaciones</h2>
+            <p>Cuando los clientes soliciten cotizaciones, aparecerán aquí.</p>
+          </div>
+        ) : (
+          <div className="quotations-grid">
+            {filteredQuotations.map((quotation) => (
+              <article
+                key={quotation._id}
+                className="quotation-card"
+                onClick={() => navigate(`/quotation/${quotation._id}`)}
+              >
+                <div className="card-header">
+                  <div className="card-title">
+                    <h3>{quotation.user?.firstName} {quotation.user?.lastName}</h3>
+                    <span className={`status-badge status-${quotation.status}`}>
+                      {getStatusLabel(quotation.status)}
+                    </span>
+                  </div>
+                  <span className="quotation-id">#{quotation._id.slice(-6)}</span>
+                </div>
+
+                <div className="card-content">
+                  <div className="info-row">
+                    <span className="label">Email:</span>
+                    <span className="value">{quotation.user?.email}</span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="label">Tipo:</span>
+                    <span className="value">
+                      {quotation.kind === 'catalog' ? '📦 Catálogo' : '🎨 Personalizada'}
+                    </span>
+                  </div>
+
+                  {quotation.kind === 'catalog' && (quotation.product?.name || quotation.product) && (
+                    <div className="info-row">
+                      <span className="label">Producto:</span>
+                      <span className="value">{quotation.product?.name || 'Catálogo'}</span>
+                    </div>
+                  )}
+
+                  {quotation.kind === 'custom' && quotation.customProduct && (
+                    <div className="info-row">
+                      <span className="label">Descripción:</span>
+                      <span className="value truncate">
+                        {quotation.customProduct.description}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="info-row">
+                    <span className="label">Cantidad:</span>
+                    <span className="value">{quotation.quantity}</span>
+                  </div>
+
+                  {quotation.finalQuotation && (
+                    <div className="info-row amount">
+                      <span className="label">Cotización:</span>
+                      <span className="value">
+                        {new Intl.NumberFormat('es-CO', {
+                          style: 'currency',
+                          currency: quotation.finalQuotation.currency || 'COP',
+                        }).format(quotation.finalQuotation.amount)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="card-footer">
+                  <span className="date">
+                    {new Date(quotation.createdAt).toLocaleDateString('es-ES')}
+                  </span>
+                  <button className="action-btn">
+                    Ver Conversación →
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    'pendiente': 'Pendiente',
+    'cotizada_ia': 'Cotizada (IA)',
+    'en_revision': 'En Revisión',
+    'cotizada': 'Cotizada',
+    'aceptada': 'Aceptada',
+    'rechazada': 'Rechazada',
+    'en_produccion': 'En Producción',
+    'completada': 'Completada',
+    'cancelada': 'Cancelada',
+  }
+  return labels[status] || status
+}

@@ -408,33 +408,42 @@ export function ProductPage({ product }) {
           >
             Volver
           </button>
-          <button
-            className="button button-primary"
-            type="button"
-            onClick={() => {
-              const payload = {
-                code: product.code || product._id,
-                name: product.name,
-                type: product.type,
-                selectedMaterial,
-                selectedDimension,
-                selectedColor: selectedColor || colorOptions[0] || "",
-              };
+          {!isAdmin && (
+            <button
+              className="button button-primary"
+              type="button"
+              onClick={() => {
+                const payload = {
+                  productId: product._id || product.id,
+                  code: product.code || product.slug,
+                  name: product.name,
+                  type: product.type,
+                  price: product.price,
+                  photo: product.photo,
+                  category: product.category,
+                  materials: product.materials,
+                  colors: product.colors,
+                  dimensions: product.dimensions,
+                  selectedMaterial,
+                  selectedDimension,
+                  selectedColor: selectedColor || colorOptions[0] || "",
+                };
 
-              if (!authToken) {
-                navigate("/login");
-                return;
-              }
+                if (!authToken) {
+                  navigate("/login");
+                  return;
+                }
 
-              navigate("/quotation-summary", {
-                state: {
-                  summary: payload,
-                },
-              });
-            }}
-          >
-            Realizar cotización
-          </button>
+                navigate("/quotation-summary", {
+                  state: {
+                    summary: payload,
+                  },
+                });
+              }}
+            >
+              Realizar cotización
+            </button>
+          )}
         </div>
       </article>
 
