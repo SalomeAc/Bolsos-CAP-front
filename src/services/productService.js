@@ -44,6 +44,24 @@ export async function fetchProducts() {
   return handleResponse(response)
 }
 
+export async function getProductByCode(code) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/products?code=${code}`)
+    return handleResponse(response)
+  } catch (err) {
+    // Si falla la búsqueda por code, obtener todos y filtrar por código o nombre en el frontend
+    try {
+      const allProducts = await fetchProducts()
+      const found = Array.isArray(allProducts) ? 
+        allProducts.find(p => p.code === code || p.name?.toLowerCase().includes(code?.toLowerCase())) :
+        null
+      return found ? [found] : []
+    } catch {
+      throw new Error(`No se encontró producto con código: ${code}`)
+    }
+  }
+}
+
 export async function createProduct(product, token) {
   const response = await fetch(`${API_BASE_URL}/api/products`, {
     method: 'POST',

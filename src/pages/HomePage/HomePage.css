@@ -19,11 +19,10 @@
 .hero-copy,
 .hero-panel,
 .section-block {
-  border: 1px solid #e9def6;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 20px 40px rgba(134, 104, 176, 0.08);
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .hero-copy,
@@ -45,44 +44,35 @@
   width: min(100%, 320px);
   height: auto;
   justify-self: center;
-}
-
-.hero-copy::after {
-  content: '';
-  position: absolute;
-  inset: auto -80px -100px auto;
-  width: 240px;
-  height: 240px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(157, 127, 196, 0.18), transparent 68%);
-  pointer-events: none;
+  border-radius: 12px;
 }
 
 .hero-copy h1 {
   margin: 0;
   font-family: var(--heading);
-  color: #2c2438;
-  font-size: clamp(1.9rem, 4vw, 2.6rem);
-  line-height: 1.03;
-  letter-spacing: -0.02em;
+  color: #000000;
+  font-size: clamp(1.6rem, 3.5vw, 2.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-weight: 600;
 }
 
 .hero-copy p,
 .hero-panel,
 .section-heading p {
-  color: #2c2438;
+  color: #404040;
 }
 
 .eyebrow {
   display: inline-flex;
   width: fit-content;
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 8px 12px;
-  background: #e9def6;
-  color: #8668b0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  background: #f5f5f5;
+  color: #666666;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -95,49 +85,38 @@
 /* Ensure primary button is visible over the purple hero-panel background */
 .hero-panel .button-primary {
   background: #ffffff;
-  color: var(--accent);
-  padding: 10px 14px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(34, 27, 49, 0.06);
+  color: #000000;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .hero-panel .button-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(34, 27, 49, 0.12);
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .hero-panel {
   display: grid;
-  /* match spacing with .hero-copy: same gap, align and min-height */
   gap: 18px;
   align-content: center;
   min-height: 360px;
-  background: linear-gradient(160deg, #8668b0, #9d7fc4), #8668b0;
+  background: #000000;
   color: #ffffff;
   position: relative;
   overflow: hidden;
 }
 
-/* Use the document serif heading for hero-panel h1 */
 .hero-panel h1 {
-  /* use same serif heading, size and spacing as .hero-copy h1 */
   font-family: var(--heading);
   color: inherit;
-  font-size: clamp(1.9rem, 4vw, 2.6rem);
-  line-height: 1.03;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.6rem, 3.5vw, 2.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   margin: 0;
-}
-
-.hero-panel::before {
-  content: '';
-  position: absolute;
-  top: -60px;
-  right: -60px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
+  font-weight: 600;
 }
 
 .hero-panel > * {
@@ -164,15 +143,6 @@
   background: transparent;
 }
 
-.section-block::before {
-  content: '';
-  position: absolute;
-  inset: 18px;
-  border-radius: 24px;
-  border: 1px solid rgba(134, 104, 176, 0.08);
-  pointer-events: none;
-}
-
 /* Center action buttons inside section blocks and match spacing */
 .section-block .hero-actions {
   display: flex;
@@ -181,7 +151,10 @@
   margin-top: 18px;
 }
 
-.section-block > * { position: relative; z-index: 1; }
+.section-block > * {
+  position: relative;
+  z-index: 1;
+}
 
 .section-heading {
   display: grid;
@@ -192,8 +165,9 @@
 .section-heading h2 {
   margin: 0;
   font-family: var(--heading);
-  color: #2c2438;
-  font-size: clamp(1.9rem, 4vw, 3rem);
+  color: #000000;
+  font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+  font-weight: 600;
 }
 
 .product-grid {
@@ -219,6 +193,6 @@
   .hero-panel,
   .section-block {
     padding: 20px;
-    border-radius: 22px;
+    border-radius: 12px;
   }
 }

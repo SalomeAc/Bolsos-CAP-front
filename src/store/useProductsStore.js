@@ -44,6 +44,8 @@ export const useProductsStore = create((set, get) => ({
   },
 
   getProductByCode: (code) => {
-    return get().products.find((product) => product.code === code)
+    // Primero busca por code, si no encuentra busca por slug (para datos locales)
+    return get().products.find((product) => product.code === code) || 
+           get().products.find((product) => product.slug === code)
   },
 }))

@@ -1,5 +1,5 @@
-import './ProductCard.css'
-import { Link } from 'react-router-dom'
+import "./ProductCard.css";
+import { Link } from "react-router-dom";
 const getImageUrl = (url) => {
   if (!url) return "";
 
@@ -19,28 +19,30 @@ const getImageUrl = (url) => {
 };
 export function ProductCard({ product }) {
   console.log(product);
-console.log(product.photo);
-console.log(getImageUrl(product.photo));
+  console.log(product.photo);
+  console.log(getImageUrl(product.photo));
   return (
-    <article className="product-card">
-      <div className="product-art" aria-hidden="true">
-        {product.photo ? (
-          <img
-  src={getImageUrl(product.photo)}
-  alt={product.name}
-/>
-        ) : (
-          <span>{product.name.slice(0, 2).toUpperCase()}</span>
-        )}
-      </div>
-      <div className="product-card-body">
-        <div className="product-meta">
-          <span>{product.type}</span>
+    <Link
+      to={`/product/${product.slug || product.code}`}
+      style={{ textDecoration: "none" }}
+    >
+      <article className="product-card">
+        <div className="product-art" aria-hidden="true">
+          {product.photo ? (
+            <img src={getImageUrl(product.photo)} alt={product.name} />
+          ) : (
+            <span>{product.name.slice(0, 2).toUpperCase()}</span>
+          )}
         </div>
-        <h3>{product.name}</h3>
-        <p>{product.description}</p>
-        <Link to={`/product/${product.code}`}>Ver producto</Link>
-      </div>
-    </article>
-  )
+        <div className="product-card-body">
+          <div className="product-meta">
+            <span>{product.type}</span>
+          </div>
+          <h3>{product.name}</h3>
+          <p>{product.description}</p>
+          <button className="product-card-button">Ver producto</button>
+        </div>
+      </article>
+    </Link>
+  );
 }

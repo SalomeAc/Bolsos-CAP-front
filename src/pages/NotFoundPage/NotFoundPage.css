@@ -6,7 +6,7 @@
   margin: 0 auto;
   padding: 28px;
   border: 1px solid #e9def6;
-  border-radius: 28px;
+  border-radius: 12px;
   background:
     radial-gradient(circle at top right, rgba(157, 127, 196, 0.16), transparent 36%),
     rgba(255, 255, 255, 0.82);
@@ -18,3 +18,9 @@
   font-family: var(--heading);
   color: #2c2438;
 }
+
+
+
+
+
+

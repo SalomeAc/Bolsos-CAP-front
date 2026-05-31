@@ -59,6 +59,8 @@ export const useAuthStore = create(
     (set) => ({
       currentUser: null,
       authToken: null,
+      returnPath: null,
+      setReturnPath: (path) => set({ returnPath: path }),
       signInWithGoogle: async (credential) => {
         const response = await fetch(`${API_BASE_URL}/api/users/login`, {
           method: 'POST',
@@ -77,11 +79,13 @@ export const useAuthStore = create(
         const credentialPayload = decodeJwtPayload(credential) || {}
         const backendProfile = data?.user || {}
         const currentUser = {
-              name: normalizeUtf8Text(backendProfile.firstName || credentialPayload.given_name || 'Usuario Google'),
+              firstName: normalizeUtf8Text(backendProfile.firstName || credentialPayload.given_name || 'Usuario'),
+              lastName: normalizeUtf8Text(backendProfile.lastName || credentialPayload.family_name || ''),
               email: normalizeUtf8Text(backendProfile.email || credentialPayload.email || ''),
               picture: backendProfile.picture || credentialPayload.picture || '',
               provider: backendProfile.authProvider || 'google',
               token: data.token,
+              id: backendProfile._id || '',
               isAdmin: backendProfile.isAdmin || false,
             }
 
@@ -92,7 +96,7 @@ export const useAuthStore = create(
 
         return { currentUser, token: data.token }
       },
-      logout: () => set({ currentUser: null, authToken: null }),
+      logout: () => set({ currentUser: null, authToken: null, returnPath: null }),
     }),
     {
       name: 'bolsoscap-auth',
@@ -102,4 +106,9 @@ export const useAuthStore = create(
       }),
     },
   ),
-)
+);
+
+// Selectores amigables para acceso fácil
+export const selectToken = (state) => state.authToken
+export const selectUser = (state) => state.currentUser
+export const selectReturnPath = (state) => state.returnPath

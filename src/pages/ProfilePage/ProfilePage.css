@@ -9,7 +9,7 @@
   min-height: 100%;
   padding: 28px;
   border: 1px solid #e9def6;
-  border-radius: 28px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(8px);
   box-shadow: 0 20px 40px rgba(134, 104, 176, 0.08);
@@ -35,7 +35,7 @@
 }
 
 .profile-card--highlight {
-  background: linear-gradient(135deg, #e9def6, rgba(255, 255, 255, 0.82));
+  background: #ffffff;
 }
 
 .profile-card--single {
@@ -47,3 +47,9 @@
     width: 100%;
   }
 }
+
+
+
+
+
+
