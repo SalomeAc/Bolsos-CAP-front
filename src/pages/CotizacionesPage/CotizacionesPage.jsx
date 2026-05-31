@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getAllQuotations } from '../../services/quotationService'
 import { useAuthStore } from '../../store/useAuthStore'
 import { Chat } from '../../components/Chat/Chat'
-import './CotizacionesPage.css'
+import '../MisCotizacionesPage/MisCotizacionesPage.css'
 
 export function CotizacionesPage() {
   const navigate = useNavigate()
@@ -66,14 +66,14 @@ export function CotizacionesPage() {
   // Filtrar cotizaciones por búsqueda
   const filteredQuotations = quotations.filter(q => {
     const searchText = searchTerm.toLowerCase()
-    const clientName = q.userId?.firstName || ''
-    const clientEmail = q.userId?.email || ''
-    const productName = q.product?.name || 'Catálogo'
+    const clientName = `${q.user?.firstName || ''} ${q.user?.lastName || ''}`.toLowerCase()
+    const clientEmail = q.user?.email?.toLowerCase() || ''
+    const productName = (q.product?.name || 'Catálogo').toLowerCase()
     
     return (
-      clientName.toLowerCase().includes(searchText) ||
-      clientEmail.toLowerCase().includes(searchText) ||
-      productName.toLowerCase().includes(searchText)
+      clientName.includes(searchText) ||
+      clientEmail.includes(searchText) ||
+      productName.includes(searchText)
     )
   })
 
@@ -89,10 +89,10 @@ export function CotizacionesPage() {
   }
 
   return (
-    <div className="cotizaciones-container">
-      <div className="cotizaciones-list-section">
-        <div className="cotizaciones-header">
-          <h2>Cotizaciones</h2>
+    <div className="mis-cotizaciones-container">
+      <div className="mis-cotizaciones-list-section">
+        <div className="mis-cotizaciones-header">
+          <h2>Cotizaciones de Clientes</h2>
           <input
             type="text"
             placeholder="Buscar cliente..."
@@ -102,7 +102,7 @@ export function CotizacionesPage() {
           />
         </div>
 
-        <div className="cotizaciones-list">
+        <div className="mis-cotizaciones-list">
           {loading && <div className="empty-state">Cargando...</div>}
           
           {error && (
@@ -124,12 +124,12 @@ export function CotizacionesPage() {
               onClick={() => setSelectedQuotation(quotation)}
             >
               <div className="quotation-item-avatar">
-                {quotation.userId?.firstName?.[0]?.toUpperCase() || 'C'}
+                {quotation.user?.firstName?.[0]?.toUpperCase() || 'C'}
               </div>
               
               <div className="quotation-item-content">
                 <div className="quotation-item-header">
-                  <h3>{quotation.userId?.firstName || 'Cliente'}</h3>
+                  <h3>{quotation.user?.firstName} {quotation.user?.lastName}</h3>
                   <span className={`status-badge status-${quotation.status}`}>
                     {quotation.status}
                   </span>
@@ -140,7 +140,7 @@ export function CotizacionesPage() {
                 </p>
                 
                 <p className="quotation-item-description">
-                  {quotation.clientMessage || 'Sin mensaje'}
+                  {quotation.user?.email || 'Sin email'}
                 </p>
               </div>
 
@@ -152,81 +152,26 @@ export function CotizacionesPage() {
         </div>
       </div>
 
-      <div className="cotizaciones-detail-section">
+      <div className="mis-cotizaciones-detail-section">
         {selectedQuotation ? (
           <>
             <div className="detail-header">
               <div className="detail-header-content">
-                <h2>{selectedQuotation.userId?.firstName || 'Cliente'}</h2>
-                <p className="detail-email">{selectedQuotation.userId?.email}</p>
+                <h2>{selectedQuotation.user?.firstName} {selectedQuotation.user?.lastName}</h2>
+                <p className="detail-email">{selectedQuotation.user?.email}</p>
               </div>
               <span className={`status-badge status-${selectedQuotation.status}`}>
                 {selectedQuotation.status}
               </span>
             </div>
 
-            <div className="product-card-info">
-              {selectedQuotation.product?.photo && (
-                <div className="product-image">
-                  <img src={selectedQuotation.product.photo} alt={selectedQuotation.product.name} />
-                </div>
-              )}
-              
-              <div className="product-details">
-                <div className="product-header-info">
-                  <div>
-                    <h3>{selectedQuotation.product?.name || 'Catálogo'}</h3>
-                    {selectedQuotation.product?.price && (
-                      <span className="price">{selectedQuotation.product.price}</span>
-                    )}
-                  </div>
-                  <span className={`status-badge status-${selectedQuotation.status}`}>
-                    {selectedQuotation.status}
-                  </span>
-                </div>
-
-                <div className="product-specs">
-                  {selectedQuotation.product?.category && (
-                    <p><strong>Categoría:</strong> {selectedQuotation.product.category}</p>
-                  )}
-                  
-                  {selectedQuotation.customization?.color && (
-                    <p><strong>Color seleccionado:</strong> {selectedQuotation.customization.color}</p>
-                  )}
-                  
-                  {selectedQuotation.customization?.size && (
-                    <p><strong>Dimensiones:</strong> {selectedQuotation.customization.size}</p>
-                  )}
-
-                  {selectedQuotation.customization?.type && (
-                    <p><strong>Tipo:</strong> {selectedQuotation.customization.type}</p>
-                  )}
-
-                  {selectedQuotation.quantity && (
-                    <p><strong>Cantidad:</strong> {selectedQuotation.quantity}</p>
-                  )}
-
-                  {selectedQuotation.clientBudget && (
-                    <p><strong>Presupuesto del cliente:</strong> ${selectedQuotation.clientBudget}</p>
-                  )}
-
-                  {selectedQuotation.clientMessage && (
-                    <p><strong>Mensaje:</strong> {selectedQuotation.clientMessage}</p>
-                  )}
-
-                  <p><strong>Fecha de solicitud:</strong> {new Date(selectedQuotation.createdAt).toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-
             <div className="detail-chat-section">
-              <h4>Conversación</h4>
               <Chat quotationId={selectedQuotation._id} quotation={selectedQuotation} isAdmin={true} />
             </div>
           </>
         ) : (
           <div className="empty-detail">
-            <p>Selecciona una cotización para ver los detalles</p>
+            <p>Selecciona una cotización para ver la conversación</p>
           </div>
         )}
       </div>

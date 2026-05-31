@@ -79,7 +79,8 @@ export const useAuthStore = create(
         const credentialPayload = decodeJwtPayload(credential) || {}
         const backendProfile = data?.user || {}
         const currentUser = {
-              name: normalizeUtf8Text(backendProfile.firstName || credentialPayload.given_name || 'Usuario Google'),
+              firstName: normalizeUtf8Text(backendProfile.firstName || credentialPayload.given_name || 'Usuario'),
+              lastName: normalizeUtf8Text(backendProfile.lastName || credentialPayload.family_name || ''),
               email: normalizeUtf8Text(backendProfile.email || credentialPayload.email || ''),
               picture: backendProfile.picture || credentialPayload.picture || '',
               provider: backendProfile.authProvider || 'google',

@@ -100,7 +100,7 @@ export function ProfilePage() {
 
         <h2>Datos básicos</h2>
         <ul>
-          <li>Nombre: {currentUser?.name || 'pendiente de conexión'}</li>
+          <li>Nombre: {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'pendiente de conexión'}</li>
           <li>Correo: {currentUser?.email || 'pendiente de conexión'}</li>
         </ul>
       </article>

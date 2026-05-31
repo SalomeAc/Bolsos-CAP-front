@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap');
 
 :root {
   --text: #3a3450;
@@ -12,7 +12,7 @@
   --shadow: rgba(134, 104, 176, 0.14) 0 20px 40px -18px;
 
   --sans: 'Inter', 'Segoe UI', sans-serif;
-  --heading: 'Fraunces', Georgia, serif;
+  --heading: 'Libre Baskerville', Georgia, serif;
   --mono: 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace;
 
   font: 17px/1.6 var(--sans);
@@ -38,6 +38,7 @@ body {
   margin: 0;
   min-width: 320px;
   background: var(--bg);
+  font-family: var(--sans);
 }
 
 a,
@@ -104,6 +105,7 @@ dl {
 h1,
 h2,
 h3 {
+  font-family: var(--heading);
   font-weight: 700;
 }
 

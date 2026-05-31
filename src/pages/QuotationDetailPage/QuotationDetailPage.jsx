@@ -14,9 +14,9 @@ export function QuotationDetailPage() {
   const [error, setError] = useState(null)
   const [responding, setResponding] = useState(false)
 
-  const token = authStore.token
-  const userId = authStore.user?.id
-  const userIsAdmin = authStore.user?.isAdmin
+  const token = authStore.authToken
+  const userId = authStore.currentUser?.id
+  const userIsAdmin = authStore.currentUser?.isAdmin
 
   // Cargar detalle de la cotización
   useEffect(() => {
@@ -246,7 +246,7 @@ export function QuotationDetailPage() {
               {isOwner ? 'Comunícate con la administradora' : 'Comunícate con el cliente'}
             </span>
           </div>
-          <Chat quotationId={quotationId} isAdmin={userIsAdmin} />
+          <Chat quotationId={quotationId} quotation={quotation} isAdmin={userIsAdmin} />
         </div>
       </div>
     </section>

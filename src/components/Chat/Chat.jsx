@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getLatestMessages, sendMessage, deleteMessage } from '../../services/messageService'
 import { useAuthStore } from '../../store/useAuthStore'
 import './Chat.css'
@@ -10,6 +11,7 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
   const [sender, setSender] = useState(null)
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
+  const navigate = useNavigate()
 
   // Obtener datos del usuario autenticado desde el store
   const authStore = useAuthStore()
@@ -131,9 +133,17 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
       <div className="chat-messages" ref={messagesContainerRef}>
         {quotation && (
           <div className="product-message-item">
-            <div className="product-card-wrapper">
+            <div 
+              className="product-card-wrapper" 
+              onClick={() => {
+                if (quotation.kind === 'catalog' && quotation.product?._id) {
+                  navigate(`/producto/${quotation.product._id}`)
+                }
+              }}
+              title={quotation.kind === 'catalog' ? 'Ver en el catálogo' : ''}
+            >
               
-              {quotation.product?.photo && (
+              {quotation.kind === 'catalog' && quotation.product?.photo && (
                 <div className="product-card-image-container">
                   <img 
                     src={quotation.product.photo} 
@@ -142,11 +152,25 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                   />
                 </div>
               )}
+
+              {quotation.kind === 'custom' && quotation.customProduct?.photo && (
+                <div className="product-card-image-container">
+                  <img 
+                    src={quotation.customProduct.photo} 
+                    alt="Producto Personalizado"
+                    className="product-card-image"
+                  />
+                </div>
+              )}
               
               <div className="product-card-details">
-                <h4 className="product-card-name">{quotation.product?.name || 'Catálogo'}</h4>
+                <h4 className="product-card-name">
+                  {quotation.kind === 'catalog' 
+                    ? (quotation.product?.name || 'Producto de Catálogo') 
+                    : 'Producto Personalizado'}
+                </h4>
                 
-                {(quotation.customization?.color || quotation.customization?.size || quotation.customization?.type) && (
+                {quotation.kind === 'catalog' && (quotation.customization?.color || quotation.customization?.size || quotation.customization?.type) && (
                   <p className="product-card-specs">
                     {quotation.customization?.color && `Color: ${quotation.customization.color}`}
                     {quotation.customization?.color && quotation.customization?.size && ' • '}
@@ -154,6 +178,15 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                     {(quotation.customization?.color || quotation.customization?.size) && quotation.customization?.type && ' • '}
                     {quotation.customization?.type && `Material: ${quotation.customization.type}`}
                   </p>
+                )}
+
+                {quotation.kind === 'custom' && quotation.customProduct && (
+                  <div className="product-card-specs" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {quotation.customProduct.description && <p><strong>Descripción:</strong> {quotation.customProduct.description}</p>}
+                    {quotation.customProduct.color && <p><strong>Color:</strong> {quotation.customProduct.color}</p>}
+                    {quotation.customProduct.dimensions && <p><strong>Dimensiones:</strong> {quotation.customProduct.dimensions}</p>}
+                    {quotation.customProduct.materials && quotation.customProduct.materials.length > 0 && <p><strong>Materiales:</strong> {quotation.customProduct.materials.join(', ')}</p>}
+                  </div>
                 )}
                 
               </div>

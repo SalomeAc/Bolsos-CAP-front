@@ -41,22 +41,17 @@ export function LoginPage() {
   return (
     <section className="auth-layout">
       <div className="auth-card">
-        <div className="auth-form" style={{ justifyContent: 'center' }}>
+        <div className="auth-form">
           <div className="auth-form-header">
-            <h2 style={{ margin: '0 0 4px 0', color: '#2c2438' }}>Bienvenido</h2>
-            <p style={{ margin: '0 0 6px 0', color: '#6b5a7d', fontSize: '0.95rem' }}>
+            <h2>Bienvenido</h2>
+
+            <p>
               Inicia sesión con Google para continuar explorando nuestro catálogo hecho a mano.
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <GoogleLogin 
-              onSuccess={handleGoogleSuccess} 
-              onError={() => setErrorMessage('Google no pudo completar el inicio de sesión.')} 
-              theme="outline" 
-              size="large" 
-              shape="pill" 
-            />
+          <div className="button-google">
+            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setErrorMessage('Google no pudo completar el inicio de sesión.')} theme="outline" size="large" shape="pill" width={320} />
           </div>
 
           {loading ? <p className="auth-feedback">Conectando con Google...</p> : null}
