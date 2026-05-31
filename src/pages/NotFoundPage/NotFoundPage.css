@@ -1,0 +1,26 @@
+.empty-state {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px;
+  border: 1px solid #e9def6;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top right, rgba(157, 127, 196, 0.16), transparent 36%),
+    rgba(255, 255, 255, 0.82);
+  box-shadow: 0 20px 40px rgba(134, 104, 176, 0.08);
+}
+
+.empty-state h1 {
+  margin: 0;
+  font-family: var(--heading);
+  color: #2c2438;
+}
+
+
+
+
+
+

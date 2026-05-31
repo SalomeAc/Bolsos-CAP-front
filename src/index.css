@@ -1,0 +1,122 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --text: #2c2c2c;
+  --text-h: #000000;
+  --bg: #ffffff;
+  --border: #e0e0e0;
+  --code-bg: #f5f5f5;
+  --accent: #000000;
+  --accent-bg: rgba(0, 0, 0, 0.05);
+  --accent-border: rgba(0, 0, 0, 0.2);
+  --shadow: rgba(0, 0, 0, 0.08) 0 2px 8px;
+
+  --sans: "Inter", "Segoe UI", sans-serif;
+  --heading: "Inter", "Segoe UI", sans-serif;
+  --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+
+  font: 16px/1.6 var(--sans);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  font-family: var(--sans);
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition:
+    color 180ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    background-color 180ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    border-color 180ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    box-shadow 180ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(134, 104, 176, 0.26);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(134, 104, 176, 0.22);
+  color: #221b31;
+}
+
+body,
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+p {
+  margin: 0;
+}
+
+ul,
+dl {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--heading);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

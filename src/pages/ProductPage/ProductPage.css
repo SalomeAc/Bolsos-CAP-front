@@ -1,0 +1,335 @@
+.product-detail-card-header {
+  display: flex;
+  justify-content: space-between; /* Izquierda y Derecha */
+  align-items: center;            /* Centrados verticalmente entre ellos */
+  width: 100%;
+  gap: 16px;
+}
+
+/* Borramos por completo el comportamiento absoluto anterior */
+.product-detail-admin-toolbar {
+  display: none;
+}
+
+/* El contenedor de los botones ahora se alinea a la derecha */
+.product-detail-admin-inline {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end; /* Los empuja al lado contrario del eyebrow */
+  margin-bottom: -10px;      /* Truco visual para acercar el título y que no quede mucho espacio vacío */
+}
+
+/* Botones estéticos, más compactos y limpios */
+.button-admin-edit, 
+.button-admin-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;         /* Tamaño más pequeño y elegante para la esquina */
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Botón Editar - Sutil con tus colores morados */
+.button-admin-edit {
+  background: #f7f3fb;
+  color: #574685;
+  border: 1px solid #e9def6;
+}
+
+.button-admin-edit:hover {
+  background: #574685;
+  color: #ffffff;
+}
+
+/* Botón Eliminar - Rojo suave peligro */
+.button-admin-delete {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.button-admin-delete:hover {
+  background: #fca5a5;
+  color: #b91c1c;
+}
+
+
+.product-detail-visual {
+  min-height: 420px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 35%),
+    #d4c2ff;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: clamp(3rem, 10vw, 6rem);
+  box-shadow: 0 20px 38px rgba(134, 104, 176, 0.14);
+  overflow: hidden;
+}
+
+.product-detail-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.product-detail-card,
+.related-panel,
+.empty-state {
+  border: 1px solid #e9def6;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 20px 40px rgba(134, 104, 176, 0.08);
+  padding: 28px;
+}
+
+.product-detail-card {
+  display: grid;
+  gap: 18px;
+}
+
+.product-detail-card h1,
+.empty-state h1 {
+  margin: 0;
+  font-family: var(--heading);
+  color: #2c2438;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+}
+
+.product-code {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #574685;
+}
+
+.product-options {
+  display: grid;
+  gap: 14px;
+}
+
+.product-dropdown,
+.product-color-picker,
+.product-selection-summary,
+.product-care {
+  padding: 14px;
+  border-radius: 8px;
+  background: #f7f3fb;
+  border: 1px solid #e9def6;
+}
+
+.product-dropdown {
+  display: grid;
+  gap: 10px;
+}
+
+.product-select {
+  appearance: none;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e0d2f1;
+  background: #ffffff;
+  color: #2c2438;
+  font: inherit;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #574685 50%),
+    linear-gradient(135deg, #574685 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.product-select:focus-visible {
+  outline: 3px solid rgba(134, 104, 176, 0.22);
+  outline-offset: 3px;
+}
+
+.choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-pill {
+  appearance: none;
+  border: 1px solid #e0d2f1;
+  background: #ffffff;
+  color: #2c2438;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.choice-pill:hover {
+  border-color: #574685;
+  transform: translateY(-1px);
+}
+
+.choice-pill.is-selected {
+  background: #574685;
+  color: #ffffff;
+  border-color: #574685;
+  box-shadow: 0 10px 20px rgba(134, 104, 176, 0.18);
+}
+
+.product-dropdown summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #574685;
+  font-weight: 700;
+}
+
+.product-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.product-dropdown ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #2c2438;
+}
+
+.product-dropdown-label {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #574685;
+  font-weight: 700;
+}
+
+.product-detail-card p,
+.related-panel p,
+.empty-state p {
+  margin: 0;
+  color: #2c2438;
+}
+
+.product-color-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid #e0d2f1;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(134, 104, 176, 0.08);
+}
+
+.color-swatch-chip {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.color-swatch-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c2438;
+  white-space: nowrap;
+}
+
+.color-swatch.is-selected {
+  border-color: #574685;
+  box-shadow: 0 10px 20px rgba(134, 104, 176, 0.18);
+  transform: translateY(-1px);
+}
+
+.color-swatch.is-selected .color-swatch-label {
+  color: #574685;
+}
+
+.color-swatch:focus-visible {
+  outline: 3px solid rgba(134, 104, 176, 0.26);
+  outline-offset: 3px;
+}
+
+.selected-color-label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2c2438;
+}
+
+.selection-empty-state {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed #d7c9ea;
+  background: #ffffff;
+  color: #6f5a89;
+  font-size: 0.95rem;
+}
+
+.product-care p {
+  margin-top: 8px;
+}
+
+.related-panel {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.empty-state {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  background:
+    radial-gradient(circle at top right, rgba(157, 127, 196, 0.16), transparent 36%),
+    rgba(255, 255, 255, 0.82);
+}
+
+@media (max-width: 1024px) {
+  .product-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .product-specs {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+
