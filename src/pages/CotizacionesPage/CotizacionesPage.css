@@ -76,7 +76,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #d0a584, #a88060);
+  background: #d4c2ff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -434,3 +434,9 @@
 .cotizaciones-list::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
+
+
+
+
+
+

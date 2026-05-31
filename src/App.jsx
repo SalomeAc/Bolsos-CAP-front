@@ -12,6 +12,7 @@ function App() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
+    // Cargar productos solo del backend
     fetchProducts()
       .then((backendProducts) => {
         if (Array.isArray(backendProducts) && backendProducts.length > 0) {

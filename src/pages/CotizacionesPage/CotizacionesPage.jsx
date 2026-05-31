@@ -1,91 +1,92 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { getAllQuotations } from '../../services/quotationService'
-import { useAuthStore } from '../../store/useAuthStore'
-import { Chat } from '../../components/Chat/Chat'
-import '../MisCotizacionesPage/MisCotizacionesPage.css'
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAllQuotations } from "../../services/quotationService";
+import { useAuthStore } from "../../store/useAuthStore";
+import { Chat } from "../../components/Chat/Chat";
+import "../MisCotizacionesPage/MisCotizacionesPage.css";
 
 export function CotizacionesPage() {
-  const navigate = useNavigate()
-  const token = useAuthStore((state) => state.authToken)
-  const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin)
-  
-  const [quotations, setQuotations] = useState([])
-  const [selectedQuotation, setSelectedQuotation] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
+  const navigate = useNavigate();
+  const token = useAuthStore((state) => state.authToken);
+  const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
+
+  const [quotations, setQuotations] = useState([]);
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Verificar que el usuario es administrador
   useEffect(() => {
     if (!userIsAdmin) {
-      navigate('/')
+      navigate("/");
     }
-  }, [userIsAdmin, navigate])
+  }, [userIsAdmin, navigate]);
 
   // Cargar todas las cotizaciones
   useEffect(() => {
-    if (!token || !userIsAdmin) return
+    if (!token || !userIsAdmin) return;
 
     const loadQuotations = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        const data = await getAllQuotations(token)
-        setQuotations(data)
-        
+        setLoading(true);
+        setError(null);
+        const data = await getAllQuotations(token);
+        setQuotations(data);
+
         // Seleccionar la primera cotización por defecto
         if (data.length > 0 && !selectedQuotation) {
-          setSelectedQuotation(data[0])
+          setSelectedQuotation(data[0]);
         }
       } catch (err) {
-        console.error('Error loading quotations:', err)
-        setError(err.message)
+        console.error("Error loading quotations:", err);
+        setError(err.message);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadQuotations()
+    loadQuotations();
 
     // Poll cada 10 segundos
-    const interval = setInterval(loadQuotations, 10000)
-    return () => clearInterval(interval)
-  }, [token, userIsAdmin])
+    const interval = setInterval(loadQuotations, 10000);
+    return () => clearInterval(interval);
+  }, [token, userIsAdmin]);
 
   // Actualizar cotización seleccionada cuando cambia la lista
   useEffect(() => {
     if (selectedQuotation) {
-      const updated = quotations.find(q => q._id === selectedQuotation._id)
+      const updated = quotations.find((q) => q._id === selectedQuotation._id);
       if (updated) {
-        setSelectedQuotation(updated)
+        setSelectedQuotation(updated);
       }
     }
-  }, [quotations])
+  }, [quotations]);
 
   // Filtrar cotizaciones por búsqueda
-  const filteredQuotations = quotations.filter(q => {
-    const searchText = searchTerm.toLowerCase()
-    const clientName = `${q.user?.firstName || ''} ${q.user?.lastName || ''}`.toLowerCase()
-    const clientEmail = q.user?.email?.toLowerCase() || ''
-    const productName = (q.product?.name || 'Catálogo').toLowerCase()
-    
+  const filteredQuotations = quotations.filter((q) => {
+    const searchText = searchTerm.toLowerCase();
+    const clientName =
+      `${q.user?.firstName || ""} ${q.user?.lastName || ""}`.toLowerCase();
+    const clientEmail = q.user?.email?.toLowerCase() || "";
+    const productName = (q.product?.name || "Catálogo").toLowerCase();
+
     return (
       clientName.includes(searchText) ||
       clientEmail.includes(searchText) ||
       productName.includes(searchText)
-    )
-  })
+    );
+  });
 
   // Ordenar por fecha más reciente primero
   const sortedQuotations = [...filteredQuotations].sort((a, b) => {
-    const dateA = new Date(a.createdAt || 0)
-    const dateB = new Date(b.createdAt || 0)
-    return dateB - dateA
-  })
+    const dateA = new Date(a.createdAt || 0);
+    const dateB = new Date(b.createdAt || 0);
+    return dateB - dateA;
+  });
 
   if (!userIsAdmin) {
-    return null
+    return null;
   }
 
   return (
@@ -104,7 +105,7 @@ export function CotizacionesPage() {
 
         <div className="mis-cotizaciones-list">
           {loading && <div className="empty-state">Cargando...</div>}
-          
+
           {error && (
             <div className="error-banner">
               <p>{error}</p>
@@ -120,27 +121,29 @@ export function CotizacionesPage() {
           {sortedQuotations.map((quotation) => (
             <div
               key={quotation._id}
-              className={`quotation-item ${selectedQuotation?._id === quotation._id ? 'active' : ''}`}
+              className={`quotation-item ${selectedQuotation?._id === quotation._id ? "active" : ""}`}
               onClick={() => setSelectedQuotation(quotation)}
             >
               <div className="quotation-item-avatar">
-                {quotation.user?.firstName?.[0]?.toUpperCase() || 'C'}
+                {quotation.user?.firstName?.[0]?.toUpperCase() || "C"}
               </div>
-              
+
               <div className="quotation-item-content">
                 <div className="quotation-item-header">
-                  <h3>{quotation.user?.firstName} {quotation.user?.lastName}</h3>
+                  <h3>
+                    {quotation.user?.firstName} {quotation.user?.lastName}
+                  </h3>
                   <span className={`status-badge status-${quotation.status}`}>
                     {quotation.status}
                   </span>
                 </div>
-                
+
                 <p className="quotation-item-product">
-                  {quotation.product?.name || 'Catálogo'}
+                  {quotation.product?.name || "Catálogo"}
                 </p>
-                
+
                 <p className="quotation-item-description">
-                  {quotation.user?.email || 'Sin email'}
+                  {quotation.user?.email || "Sin email"}
                 </p>
               </div>
 
@@ -157,16 +160,25 @@ export function CotizacionesPage() {
           <>
             <div className="detail-header">
               <div className="detail-header-content">
-                <h2>{selectedQuotation.user?.firstName} {selectedQuotation.user?.lastName}</h2>
+                <h2>
+                  {selectedQuotation.user?.firstName}{" "}
+                  {selectedQuotation.user?.lastName}
+                </h2>
                 <p className="detail-email">{selectedQuotation.user?.email}</p>
               </div>
-              <span className={`status-badge status-${selectedQuotation.status}`}>
+              <span
+                className={`status-badge status-${selectedQuotation.status}`}
+              >
                 {selectedQuotation.status}
               </span>
             </div>
 
             <div className="detail-chat-section">
-              <Chat quotationId={selectedQuotation._id} quotation={selectedQuotation} isAdmin={true} />
+              <Chat
+                quotationId={selectedQuotation._id}
+                quotation={selectedQuotation}
+                isAdmin={true}
+              />
             </div>
           </>
         ) : (
@@ -176,5 +188,5 @@ export function CotizacionesPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

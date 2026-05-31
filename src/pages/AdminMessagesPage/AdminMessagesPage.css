@@ -353,7 +353,7 @@
 }
 
 .action-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #574685;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -443,3 +443,9 @@
     width: 100%;
   }
 }
+
+
+
+
+
+

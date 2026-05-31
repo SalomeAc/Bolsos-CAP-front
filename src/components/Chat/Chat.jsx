@@ -1,194 +1,224 @@
-import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { getLatestMessages, sendMessage, deleteMessage } from '../../services/messageService'
-import { useAuthStore } from '../../store/useAuthStore'
-import './Chat.css'
+import { useEffect, useState, useRef } from "react";
+import {
+  getLatestMessages,
+  sendMessage,
+  deleteMessage,
+} from "../../services/messageService";
+import { useAuthStore } from "../../store/useAuthStore";
+import "./Chat.css";
 
 export function Chat({ quotationId, quotation, isAdmin = false }) {
-  const [messages, setMessages] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [newMessage, setNewMessage] = useState('')
-  const [sender, setSender] = useState(null)
-  const [error, setError] = useState(null)
-  const [sending, setSending] = useState(false)
-  const navigate = useNavigate()
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [sender, setSender] = useState(null);
+  const [error, setError] = useState(null);
+  const [sending, setSending] = useState(false);
 
   // Obtener datos del usuario autenticado desde el store
-  const authStore = useAuthStore()
-  const userId = authStore.currentUser?.id
-  const token = authStore.authToken
-  const userName = `${authStore.currentUser?.firstName} ${authStore.currentUser?.lastName}`
+  const authStore = useAuthStore();
+  const userId = authStore.currentUser?.id;
+  const token = authStore.authToken;
+  const userName = `${authStore.currentUser?.firstName} ${authStore.currentUser?.lastName}`;
 
-  const messagesEndRef = useRef(null)
-  const messagesContainerRef = useRef(null)
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   // Auto-scroll al final cuando hay nuevos mensajes
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   // Cargar mensajes al montar el componente
   useEffect(() => {
-    if (!quotationId || !token) return
+    if (!quotationId || !token) return;
 
     const loadMessages = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        const data = await getLatestMessages(quotationId, token, 100)
-        setMessages(data)
+        setLoading(true);
+        setError(null);
+        const data = await getLatestMessages(quotationId, token, 100);
+        setMessages(data);
       } catch (err) {
-        console.error('Error loading messages:', err)
-        setError(err.message)
+        console.error("Error loading messages:", err);
+        setError(err.message);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadMessages()
+    loadMessages();
 
     // Poll para nuevos mensajes cada 3 segundos
-    const interval = setInterval(loadMessages, 3000)
-    return () => clearInterval(interval)
-  }, [quotationId, token])
+    const interval = setInterval(loadMessages, 3000);
+    return () => clearInterval(interval);
+  }, [quotationId, token]);
 
   // Enviar mensaje
   const handleSendMessage = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!newMessage.trim()) {
-      setError('El mensaje no puede estar vacío')
-      return
+      setError("El mensaje no puede estar vacío");
+      return;
     }
 
     if (!token || !quotationId) {
-      setError('No hay sesión activa o cotización no válida')
-      return
+      setError("No hay sesión activa o cotización no válida");
+      return;
     }
 
     try {
-      setSending(true)
-      setError(null)
+      setSending(true);
+      setError(null);
 
-      const message = await sendMessage(quotationId, newMessage, token)
-      setMessages([...messages, message])
-      setNewMessage('')
+      const message = await sendMessage(quotationId, newMessage, token);
+      setMessages([...messages, message]);
+      setNewMessage("");
     } catch (err) {
-      console.error('Error sending message:', err)
-      setError(err.message)
+      console.error("Error sending message:", err);
+      setError(err.message);
     } finally {
-      setSending(false)
+      setSending(false);
     }
-  }
+  };
 
   // Eliminar mensaje
   const handleDeleteMessage = async (messageId) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este mensaje?')) {
-      return
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este mensaje?")) {
+      return;
     }
 
     try {
-      setError(null)
-      await deleteMessage(messageId, token)
-      setMessages(messages.filter(msg => msg._id !== messageId))
+      setError(null);
+      await deleteMessage(messageId, token);
+      setMessages(messages.filter((msg) => msg._id !== messageId));
     } catch (err) {
-      console.error('Error deleting message:', err)
-      setError(err.message)
+      console.error("Error deleting message:", err);
+      setError(err.message);
     }
-  }
+  };
 
   // Formatear hora
   const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+    return new Date(date).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   // Formatear fecha
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-    })
-  }
-
+    return new Date(date).toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+    });
+  };
 
   // Agrupar mensajes por fecha
   const groupedMessages = messages.reduce((acc, msg) => {
-    const date = formatDate(msg.createdAt)
+    const date = formatDate(msg.createdAt);
     if (!acc[date]) {
-      acc[date] = []
+      acc[date] = [];
     }
-    acc[date].push(msg)
-    return acc
-  }, {})
+    acc[date].push(msg);
+    return acc;
+  }, {});
 
   return (
     <div className="chat-container">
       <div className="chat-messages" ref={messagesContainerRef}>
         {quotation && (
           <div className="product-message-item">
-            <div 
-              className="product-card-wrapper" 
-              onClick={() => {
-                if (quotation.kind === 'catalog' && quotation.product?._id) {
-                  navigate(`/producto/${quotation.product._id}`)
-                }
-              }}
-              title={quotation.kind === 'catalog' ? 'Ver en el catálogo' : ''}
-            >
-              
-              {quotation.kind === 'catalog' && quotation.product?.photo && (
+            <div className="product-card-wrapper">
+              {quotation.kind === "catalog" && quotation.product?.photo && (
                 <div className="product-card-image-container">
-                  <img 
-                    src={quotation.product.photo} 
+                  <img
+                    src={quotation.product.photo}
                     alt={quotation.product.name}
                     className="product-card-image"
                   />
                 </div>
               )}
 
-              {quotation.kind === 'custom' && quotation.customProduct?.photo && (
-                <div className="product-card-image-container">
-                  <img 
-                    src={quotation.customProduct.photo} 
-                    alt="Producto Personalizado"
-                    className="product-card-image"
-                  />
-                </div>
-              )}
-              
-              <div className="product-card-details">
-                <h4 className="product-card-name">
-                  {quotation.kind === 'catalog' 
-                    ? (quotation.product?.name || 'Producto de Catálogo') 
-                    : 'Producto Personalizado'}
-                </h4>
-                
-                {quotation.kind === 'catalog' && (quotation.customization?.color || quotation.customization?.size || quotation.customization?.type) && (
-                  <p className="product-card-specs">
-                    {quotation.customization?.color && `Color: ${quotation.customization.color}`}
-                    {quotation.customization?.color && quotation.customization?.size && ' • '}
-                    {quotation.customization?.size && `Dimensiones: ${quotation.customization.size}`}
-                    {(quotation.customization?.color || quotation.customization?.size) && quotation.customization?.type && ' • '}
-                    {quotation.customization?.type && `Material: ${quotation.customization.type}`}
-                  </p>
-                )}
-
-                {quotation.kind === 'custom' && quotation.customProduct && (
-                  <div className="product-card-specs" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {quotation.customProduct.description && <p><strong>Descripción:</strong> {quotation.customProduct.description}</p>}
-                    {quotation.customProduct.color && <p><strong>Color:</strong> {quotation.customProduct.color}</p>}
-                    {quotation.customProduct.dimensions && <p><strong>Dimensiones:</strong> {quotation.customProduct.dimensions}</p>}
-                    {quotation.customProduct.materials && quotation.customProduct.materials.length > 0 && <p><strong>Materiales:</strong> {quotation.customProduct.materials.join(', ')}</p>}
+              {quotation.kind === "custom" &&
+                quotation.customProduct?.photo && (
+                  <div className="product-card-image-container">
+                    <img
+                      src={quotation.customProduct.photo}
+                      alt="Producto Personalizado"
+                      className="product-card-image"
+                    />
                   </div>
                 )}
-                
+
+              <div className="product-card-details">
+                <h4 className="product-card-name">
+                  {quotation.kind === "catalog"
+                    ? quotation.product?.name || "Producto de Catálogo"
+                    : "Producto Personalizado"}
+                </h4>
+
+                {quotation.kind === "catalog" &&
+                  (quotation.customization?.color ||
+                    quotation.customization?.size ||
+                    quotation.customization?.type) && (
+                    <p className="product-card-specs">
+                      {quotation.customization?.color &&
+                        `Color: ${quotation.customization.color}`}
+                      {quotation.customization?.color &&
+                        quotation.customization?.size &&
+                        " • "}
+                      {quotation.customization?.size &&
+                        `Dimensiones: ${quotation.customization.size}`}
+                      {(quotation.customization?.color ||
+                        quotation.customization?.size) &&
+                        quotation.customization?.type &&
+                        " • "}
+                      {quotation.customization?.type &&
+                        `Material: ${quotation.customization.type}`}
+                    </p>
+                  )}
+
+                {quotation.kind === "custom" && quotation.customProduct && (
+                  <div
+                    className="product-card-specs"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "4px",
+                    }}
+                  >
+                    {quotation.customProduct.description && (
+                      <p>
+                        <strong>Descripción:</strong>{" "}
+                        {quotation.customProduct.description}
+                      </p>
+                    )}
+                    {quotation.customProduct.color && (
+                      <p>
+                        <strong>Color:</strong> {quotation.customProduct.color}
+                      </p>
+                    )}
+                    {quotation.customProduct.dimensions && (
+                      <p>
+                        <strong>Dimensiones:</strong>{" "}
+                        {quotation.customProduct.dimensions}
+                      </p>
+                    )}
+                    {quotation.customProduct.materials &&
+                      quotation.customProduct.materials.length > 0 && (
+                        <p>
+                          <strong>Materiales:</strong>{" "}
+                          {quotation.customProduct.materials.join(", ")}
+                        </p>
+                      )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -196,7 +226,9 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
         {loading && messages.length === 0 ? (
           <div className="chat-loading">Cargando mensajes...</div>
         ) : messages.length === 0 ? (
-          <div className="chat-empty">No hay mensajes aún. ¡Sé el primero en escribir!</div>
+          <div className="chat-empty">
+            No hay mensajes aún. ¡Sé el primero en escribir!
+          </div>
         ) : (
           <>
             {Object.entries(groupedMessages).map(([date, msgs]) => (
@@ -205,13 +237,17 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                 {msgs.map((msg) => (
                   <div
                     key={msg._id}
-                    className={`chat-message ${msg.sender._id === userId ? 'sent' : 'received'}`}
+                    className={`chat-message ${msg.sender._id === userId ? "sent" : "received"}`}
                   >
                     <div className="chat-message-header">
                       <span className="chat-sender-name">
-                        {msg.sender._id === userId ? 'Tú' : msg.sender.firstName}
+                        {msg.sender._id === userId
+                          ? "Tú"
+                          : msg.sender.firstName}
                       </span>
-                      <span className="chat-message-time">{formatTime(msg.createdAt)}</span>
+                      <span className="chat-message-time">
+                        {formatTime(msg.createdAt)}
+                      </span>
                       {msg.sender._id === userId && (
                         <button
                           className="chat-delete-btn"
@@ -223,9 +259,7 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                         </button>
                       )}
                     </div>
-                    <div className="chat-message-content">
-                      {msg.content}
-                    </div>
+                    <div className="chat-message-content">{msg.content}</div>
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="chat-message-attachments">
                         {msg.attachments.map((attachment, idx) => (
@@ -279,9 +313,9 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
           className="chat-send-btn"
           aria-label="Enviar mensaje"
         >
-          {sending ? 'Enviando...' : 'Enviar'}
+          {sending ? "Enviando..." : "Enviar"}
         </button>
       </form>
     </div>
-  )
+  );
 }

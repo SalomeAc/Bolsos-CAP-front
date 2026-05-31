@@ -213,7 +213,7 @@
 
 /* Final Quotation Section */
 .quotation-final-section {
-  background: linear-gradient(135deg, #f9f8ff 0%, #fff9ff 100%);
+  background: #ffffff;
   border-left: 4px solid #667eea;
 }
 
@@ -430,3 +430,9 @@
     flex-direction: column;
   }
 }
+
+
+
+
+
+
