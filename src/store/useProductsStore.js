@@ -15,7 +15,7 @@ import { products as initialProducts } from '../data/products.js'
  */
 
 export const useProductsStore = create((set, get) => ({
-  products: initialProducts,
+  products: [],
 
   setProducts: (products) => {
     set({ products })
@@ -28,18 +28,24 @@ export const useProductsStore = create((set, get) => ({
   updateProduct: (slug, updates) => {
     set((state) => ({
       products: state.products.map((product) =>
-        product.slug === slug ? { ...product, ...updates } : product
+        (product.slug === slug || product.code === slug) ? { ...product, ...updates } : product
       ),
     }))
   },
 
   deleteProduct: (slug) => {
     set((state) => ({
-      products: state.products.filter((product) => product.slug !== slug),
+      products: state.products.filter((product) => (product.slug || product.code) !== slug),
     }))
   },
 
   getProductBySlug: (slug) => {
     return get().products.find((product) => product.slug === slug)
+  },
+
+  getProductByCode: (code) => {
+    // Primero busca por code, si no encuentra busca por slug (para datos locales)
+    return get().products.find((product) => product.code === code) || 
+           get().products.find((product) => product.slug === code)
   },
 }))

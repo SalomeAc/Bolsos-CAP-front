@@ -1,8 +1,11 @@
 import { ProductCard } from "../../components/ProductCard/ProductCard.jsx";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore.js";
 import "./HomePage.css";
 
 export function HomePage({ products }) {
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const isAdmin = currentUser?.isAdmin === true;
   const featuredProducts = products.slice(0, 3);
 
   return (
@@ -16,16 +19,34 @@ export function HomePage({ products }) {
           <span className="eyebrow">Accesorios artesanales</span>
           <h1>Bolsos en crochet hechos para destacar cada salida.</h1>
           <p>
-            Hecho a mano. Texturas cálidas y piezas únicas — diseños que cuentan
+            Hecho a mano. Texturas cálidas y piezas únicas - diseños que cuentan
             historias.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" to="/catalog">
-              Explorar catálogo
-            </Link>
-            <Link className="button button-secondary" to="/login">
-              Iniciar sesión
-            </Link>
+            {currentUser ? (
+              <>
+                <Link className="button button-primary" to="/catalog">
+                  Ver catálogo
+                </Link>
+                <Link className="button button-secondary" to="/profile">
+                  Mi perfil
+                </Link>
+                {isAdmin && (
+                  <Link className="button button-secondary" to="/admin">
+                    Dashboard Admin
+                  </Link>
+                )}
+              </>
+            ) : (
+              <>
+                <Link className="button button-primary" to="/catalog">
+                  Explorar catálogo
+                </Link>
+                <Link className="button button-secondary" to="/login">
+                  Iniciar sesión
+                </Link>
+              </>
+            )}
           </div>
         </aside>
       </section>
@@ -37,12 +58,12 @@ export function HomePage({ products }) {
         </div>
         <div className="product-grid product-grid--featured">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product.code || product._id} product={product} />
           ))}
         </div>
         <div className="hero-actions">
           <Link className="button button-secondary" to="/catalog">
-            +
+            ↓
           </Link>
         </div>
       </section>

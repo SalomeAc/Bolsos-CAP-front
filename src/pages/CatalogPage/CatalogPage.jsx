@@ -1,20 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProductCard } from "../../components/ProductCard/ProductCard.jsx";
 import { CreateProductModal } from "../../components/ProductAdmin/CreateProductModal.jsx";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { useProductsStore } from "../../store/useProductsStore.js";
-import { createProduct as createProductApi } from "../../services/productService.js";
+import {
+  createProduct as createProductApi,
+  fetchProducts,
+} from "../../services/productService.js";
 import "./CatalogPage.css";
 
 export function CatalogPage() {
   const products = useProductsStore((state) => state.products);
   const addProduct = useProductsStore((state) => state.addProduct);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
+  const authToken = useAuthStore((state) => state.authToken);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const setProducts = useProductsStore((state) => state.setProducts);
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadProducts();
+  }, [setProducts]);
 
   const handleCreateProduct = async (product) => {
     try {
-      const createdProduct = await createProductApi(product);
+      const createdProduct = await createProductApi(product, authToken);
       addProduct(createdProduct);
       setIsModalOpen(false);
     } catch (error) {
@@ -52,7 +70,7 @@ export function CatalogPage() {
 
         <div className="product-grid">
           {products.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product._id} product={product} />
           ))}
         </div>
       </section>

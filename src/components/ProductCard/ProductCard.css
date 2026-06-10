@@ -23,8 +23,12 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 35%),
-    linear-gradient(135deg, #9d7fc4, #8668b0);
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.3),
+      transparent 35%
+    ),
+    #d4c2ff;
   color: #ffffff;
   font-weight: 800;
   font-size: 2rem;
@@ -55,7 +59,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  color: #8668b0;
+  color: #574685;
   font-size: 0.92rem;
 }
 
@@ -64,8 +68,26 @@
   color: #2c2438;
 }
 
+.product-card-button {
+  background: #574685;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.product-card-button:hover {
+  background: #6f4fa0;
+  transform: scale(1.05);
+}
+
 .product-card a {
-  color: #8668b0;
+  color: #574685;
   font-weight: 700;
   text-decoration: none;
   width: fit-content;
