@@ -24,9 +24,15 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // Auto-scroll al final cuando hay nuevos mensajes
+  // Auto-scroll al final solo si el usuario está al final
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      // Solo scroll si está casi al final (menos de 100px del bottom)
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   };
 
   useEffect(() => {
@@ -42,7 +48,13 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
         setLoading(true);
         setError(null);
         const data = await getLatestMessages(quotationId, token, 100);
-        setMessages(data);
+        // Solo actualizar si los mensajes realmente cambiaron
+        setMessages((prev) => {
+          if (prev && JSON.stringify(prev) === JSON.stringify(data)) {
+            return prev; // No cambió, no re-renderizar
+          }
+          return data;
+        });
       } catch (err) {
         console.error("Error loading messages:", err);
         setError(err.message);
