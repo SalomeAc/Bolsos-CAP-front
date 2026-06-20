@@ -87,6 +87,7 @@ export function HistorialCotizacionesPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
 
   useEffect(() => {
     if (!userIsAdmin) {
@@ -129,15 +130,22 @@ export function HistorialCotizacionesPage() {
           customerEmail.includes(normalizedSearch);
         const matchesStatus =
           statusFilter === "all" || quotation?.status === statusFilter;
+        const quotationDate = quotation?.createdAt
+        ? new Date(quotation.createdAt).toISOString().split("T")[0]
+        : "";
 
-        return matchesSearch && matchesStatus;
+        const matchesDate =
+          !dateFilter ||
+          new Date(quotation.createdAt).toLocaleDateString("en-CA") === dateFilter;
+
+        return matchesSearch && matchesStatus && matchesDate;
       })
       .sort((quotationA, quotationB) => {
         const dateA = new Date(quotationA?.createdAt || 0).getTime();
         const dateB = new Date(quotationB?.createdAt || 0).getTime();
         return dateB - dateA;
       });
-  }, [quotations, searchTerm, statusFilter]);
+  }, [quotations, searchTerm, statusFilter, dateFilter]);
 
   if (!userIsAdmin) {
     return null;
@@ -187,6 +195,17 @@ export function HistorialCotizacionesPage() {
             ))}
           </select>
         </div>
+
+        <div className="filter-group">
+        <label htmlFor="date-filter">Fecha</label>
+        <input
+          id="date-filter"
+          className="search-input"
+          type="date"
+          value={dateFilter}
+          onChange={(event) => setDateFilter(event.target.value)}
+        />
+      </div>
       </section>
 
       <section className="historial-table-card">
