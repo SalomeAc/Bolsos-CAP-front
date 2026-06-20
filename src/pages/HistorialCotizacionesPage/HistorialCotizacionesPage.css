@@ -12,7 +12,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  background: linear-gradient(135deg, #fff9f4 0%, #ffffff 55%, #f8f4ff 100%);
+  background: #fffefd;
   border: 1px solid rgba(208, 165, 132, 0.18);
   border-radius: 18px;
   padding: 1.5rem;
@@ -50,15 +50,12 @@
   justify-content: center;
   gap: 0.25rem;
   padding: 1rem 1.25rem;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(118, 75, 162, 0.12);
-  box-shadow: 0 6px 18px rgba(44, 36, 56, 0.04);
+    
 }
 
 .historial-summary strong {
   font-size: 2rem;
-  color: #d0a584;
+  color: #776659;
   line-height: 1;
 }
 
@@ -132,7 +129,7 @@
 }
 
 .historial-table thead {
-  background: linear-gradient(90deg, #fff8f0 0%, #fbf7ff 100%);
+  background: #fff8f0;
 }
 
 .historial-table th {

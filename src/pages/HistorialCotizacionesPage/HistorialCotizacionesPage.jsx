@@ -154,7 +154,7 @@ export function HistorialCotizacionesPage() {
 
         <div className="historial-summary">
           <strong>{filteredQuotations.length}</strong>
-          <span>Cotizaciones visibles</span>
+          <span>Cotizaciones</span>
         </div>
       </header>
 
