@@ -10,6 +10,7 @@ const getNavLinks = (isAdmin) => {
   ];
   if (isAdmin) {
     baseLinks.push({ to: "/cotizaciones", label: "Cotizaciones" });
+    baseLinks.push({ to: "/admin/historial-cotizaciones", label: "Historial" });
   } else {
     baseLinks.push({ to: "/mis-cotizaciones", label: "Mis Cotizaciones" });
   }
