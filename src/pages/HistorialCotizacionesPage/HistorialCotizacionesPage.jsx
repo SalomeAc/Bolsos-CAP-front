@@ -85,9 +85,9 @@ export function HistorialCotizacionesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [productFilter, setProductFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
-
   useEffect(() => {
     if (!userIsAdmin) {
       navigate("/");
@@ -135,11 +135,27 @@ export function HistorialCotizacionesPage() {
 
   const filteredQuotations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
+    const normalizedProduct = productFilter.trim().toLowerCase();
 
     return [...quotations]
       .filter((quotation) => {
         const customerName = getCustomerName(quotation).toLowerCase();
         const customerEmail = (quotation?.user?.email || "").toLowerCase();
+
+        const productName =
+        quotation?.kind === "catalog"
+          ? (quotation?.product?.name || "").toLowerCase()
+          : "personalizado";
+
+      const productType =
+        quotation?.kind === "catalog"
+          ? "cotización de catálogo"
+          : (quotation?.customProduct?.description || "").toLowerCase();
+
+      const matchesProduct =
+        normalizedProduct.length === 0 ||
+        productName.includes(normalizedProduct) ||
+        productType.includes(normalizedProduct);
         const matchesSearch =
           normalizedSearch.length === 0 ||
           customerName.includes(normalizedSearch) ||
@@ -154,14 +170,14 @@ export function HistorialCotizacionesPage() {
           !dateFilter ||
           new Date(quotation.createdAt).toLocaleDateString("en-CA") === dateFilter;
 
-        return matchesSearch && matchesStatus && matchesDate;
+        return matchesSearch && matchesStatus && matchesDate && matchesProduct;
       })
       .sort((quotationA, quotationB) => {
         const dateA = new Date(quotationA?.createdAt || 0).getTime();
         const dateB = new Date(quotationB?.createdAt || 0).getTime();
         return dateB - dateA;
       });
-  }, [quotations, searchTerm, statusFilter, dateFilter]);
+  }, [quotations, searchTerm, statusFilter, dateFilter, productFilter]);
 
   if (!userIsAdmin) {
     return null;
@@ -194,6 +210,19 @@ export function HistorialCotizacionesPage() {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
         </div>
+
+        <div className="filter-group">
+        <label htmlFor="product-filter">Producto / tipo</label>
+
+        <input
+          id="product-filter"
+          className="search-input"
+          type="search"
+          placeholder="Bolso Bloom, personalizado, etc."
+          value={productFilter}
+          onChange={(event) => setProductFilter(event.target.value)}
+        />
+      </div>
 
         <div className="filter-group">
           <label htmlFor="status-filter">Estado</label>
