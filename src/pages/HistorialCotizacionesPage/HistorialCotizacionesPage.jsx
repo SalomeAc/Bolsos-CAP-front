@@ -5,6 +5,7 @@ import {
   updateQuotationStatus,
 } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
+import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
 import "./HistorialCotizacionesPage.css";
 import VoiceButton from "../../components/VoiceButton/VoiceButton";
 import "../../components/VoiceButton/VoiceButton.css";
@@ -115,6 +116,7 @@ export function HistorialCotizacionesPage() {
 
   // Feedback visual del texto reconocido (de la versión 2)
   const [voiceLabel, setVoiceLabel] = useState(null);
+  const [traceabilityQuotationId, setTraceabilityQuotationId] = useState(null);
 
   useEffect(() => {
     if (!userIsAdmin) navigate("/");
@@ -381,9 +383,11 @@ export function HistorialCotizacionesPage() {
                 <tr>
                   <th>Cliente</th>
                   <th>Producto / tipo</th>
+                  <th>Solicitud</th>
                   <th>Fecha</th>
                   <th>Estado</th>
                   <th>Precio</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -423,6 +427,7 @@ export function HistorialCotizacionesPage() {
                         </span>
                       </div>
                     </td>
+                    <td>{quotation?.solicitud?.code || "—"}</td>
                     <td>{formatDate(quotation?.createdAt)}</td>
                     <td>
                       <div className="status-select-wrapper">
@@ -453,6 +458,22 @@ export function HistorialCotizacionesPage() {
                         {formatPrice(quotation)}
                       </strong>
                     </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="historial-trace-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTraceabilityQuotationId(
+                            traceabilityQuotationId === quotation._id
+                              ? null
+                              : quotation._id
+                          );
+                        }}
+                      >
+                        Trazabilidad
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -460,6 +481,14 @@ export function HistorialCotizacionesPage() {
           </div>
         )}
       </section>
+
+      {traceabilityQuotationId && (
+        <TraceabilityPanel
+          quotationId={traceabilityQuotationId}
+          token={token}
+          onClose={() => setTraceabilityQuotationId(null)}
+        />
+      )}
     </section>
   );
 }

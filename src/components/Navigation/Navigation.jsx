@@ -2,6 +2,7 @@ import "./Navigation.css";
 import { Link, NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore.js";
+import { NotificationBell } from "../Notifications/NotificationBell.jsx";
 
 const getNavLinks = (isAdmin) => {
   const baseLinks = [
@@ -63,6 +64,7 @@ export function Navigation() {
 
         {currentUser ? (
           <>
+            {isAdmin && <NotificationBell />}
             <span style={{ marginRight: "1rem", fontSize: "0.9rem" }}>
               {currentUser.firstName || currentUser.name}
             </span>

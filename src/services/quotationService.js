@@ -143,6 +143,20 @@ export async function setFinalQuotation(quotationId, finalQuotationData, token) 
 }
 
 /**
+ * Consultar trazabilidad solicitud ↔ cotización (solo admin)
+ * @param {string} quotationId
+ * @param {string} token
+ */
+export async function getQuotationTraceability(quotationId, token) {
+  const response = await fetch(`${API_BASE_URL}/api/quotations/${quotationId}/traceability`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  return handleResponse(response)
+}
+
+/**
  * Crear cotización personalizada desde formulario (multipart + foto opcional)
  * @param {FormData} formData - dimensions, color, material, observaciones?, photo?
  * @param {string} token - Token JWT

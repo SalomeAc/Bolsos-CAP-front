@@ -438,6 +438,22 @@ input[type="date"]:focus {
   }
 }
 
+.historial-trace-btn {
+  border: 1px solid #d8d0e8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  color: #574685;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.historial-trace-btn:hover {
+  background: #f5f3fa;
+}
+
 @media (max-width: 900px) {
   .historial-filters {
     grid-template-columns: 1fr;
