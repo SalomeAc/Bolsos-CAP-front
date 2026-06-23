@@ -94,6 +94,7 @@
 .product-detail-card {
   display: grid;
   gap: 18px;
+  position: relative;
 }
 
 .product-detail-card h1,
@@ -317,6 +318,11 @@
     radial-gradient(circle at top right, rgba(157, 127, 196, 0.16), transparent 36%),
     rgba(255, 255, 255, 0.82);
 }
+.product-detail-card > .speak-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
 
 @media (max-width: 1024px) {
   .product-detail-layout {
@@ -327,9 +333,4 @@
     grid-template-columns: 1fr;
   }
 }
-
-
-
-
-
 

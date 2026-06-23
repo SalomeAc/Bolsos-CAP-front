@@ -1,0 +1,145 @@
+.speak-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-weight: 600;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Variante inline (pequeño) */
+.speak-button--inline {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: #f7f3fb;
+  color: #574685;
+  border: 2px solid #e9def6;
+  font-size: 0;
+}
+
+.speak-button--inline:hover:not(:disabled) {
+  background: #ede5f7;
+  border-color: #dcc8ec;
+  transform: scale(1.05);
+}
+
+.speak-button--inline:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Variante primary (grande) — píldora con ícono + dos líneas */
+.speak-button--primary {
+  padding: 10px 20px 10px 12px;
+  background: #f7f3fb;
+  color: #574685;
+  border: 1.5px solid #7F77DD;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  gap: 10px;
+  text-align: left;
+  align-items: center;
+}
+
+.speak-button--primary:hover:not(:disabled) {
+  background: #EEEDFE;
+  box-shadow: 0 0 0 4px #CECBF6;
+  transform: scale(1.02);
+}
+
+.speak-button--primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Ícono circular dentro del primary */
+.speak-button--primary .speak-button-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #EEEDFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #534AB7;
+  transition: background 0.18s, color 0.18s;
+}
+
+/* Texto en dos líneas */
+.speak-button--primary .speak-button-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.speak-button--primary .speak-button-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: #534AB7;
+  line-height: 1.2;
+}
+
+.speak-button--primary .speak-button-sub {
+  display: block;
+  font-size: 12px;
+  color: #7F77DD;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* Estado is-speaking */
+.speak-button.is-speaking {
+  background: #EEEDFE;
+  border-color: #534AB7;
+  animation: pulse-speak 0.6s ease-in-out infinite;
+}
+
+.speak-button.is-speaking .speak-button-icon {
+  background: #534AB7;
+  color: #fff;
+}
+
+.speak-button.is-speaking .speak-button-label {
+  color: #3C3489;
+}
+
+.speak-button.is-speaking:hover {
+  transform: none;
+}
+
+/* Estado disabled */
+.speak-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Animación de pulso */
+@keyframes pulse-speak {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(87, 70, 133, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(87, 70, 133, 0); }
+}
+
+/* Mensaje de error */
+.speak-error {
+  display: block;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(176, 0, 32, 0.1);
+  border: 1px solid rgba(176, 0, 32, 0.2);
+  border-radius: 8px;
+  color: #b00020;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 480px) {
+  .speak-button--primary {
+    width: 100%;
+    padding: 14px 16px;
+  }
+}
