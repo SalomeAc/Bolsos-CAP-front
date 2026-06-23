@@ -11,11 +11,7 @@ export default function VoiceButton({ onResult }) {
   };
 
   return (
-    <button
-      className="voice-search-button"
-      type="button"
-      onClick={handleClick}
-    >
+    <button className="voice-search-button" type="button" onClick={handleClick}>
       <span className="iconamoon--microphone-bold"></span>
     </button>
   );
