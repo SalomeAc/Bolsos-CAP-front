@@ -8,6 +8,7 @@ import {
   fetchProducts,
 } from "../../services/productService.js";
 import "./CatalogPage.css";
+import { recognizeSpeech } from "../../services/speechService";
 
 export function CatalogPage() {
   const products = useProductsStore((state) => state.products);
@@ -16,6 +17,20 @@ export function CatalogPage() {
   const authToken = useAuthStore((state) => state.authToken);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const setProducts = useProductsStore((state) => state.setProducts);
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredProducts = products.filter((product) =>
+    `${product.name ?? ""} ${product.description ?? ""}`
+      .toLowerCase()
+      .includes((searchTerm ?? "").toLowerCase()),
+  );
+  const handleVoiceSearch = async () => {
+    try {
+      const text = await recognizeSpeech();
+      setSearchTerm(text);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     async function loadProducts() {
@@ -67,9 +82,23 @@ export function CatalogPage() {
             </div>
           ) : null}
         </div>
-
+        <div className="catalog-search">
+          <input
+            type="text"
+            placeholder="Buscar producto..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            className="voice-search-button"
+            type="button"
+            onClick={handleVoiceSearch}
+          >
+            <span className="iconamoon--microphone-bold"></span>
+          </button>
+        </div>
         <div className="product-grid">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
         </div>
