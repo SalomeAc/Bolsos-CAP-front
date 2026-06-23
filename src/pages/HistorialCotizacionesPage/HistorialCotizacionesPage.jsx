@@ -285,23 +285,25 @@ export function HistorialCotizacionesPage() {
                     </td>
                     <td>{formatDate(quotation?.createdAt)}</td>
                     <td>
-                      <select
-                        className={`status-select status-${quotation.status}`}
-                        value={quotation.status}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={(event) =>
-                          handleStatusChange(
-                            quotation._id,
-                            event.target.value
-                          )
-                        }
-                      >
+                      <div className={`status-select-wrapper`}>
+                        <select
+                          className={`status-select status-${quotation.status}`}
+                          value={quotation.status}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) =>
+                            handleStatusChange(
+                              quotation._id,
+                              event.target.value
+                            )
+                          }
+                        >
                         {statusOptions.map((status) => (
                           <option key={status.value} value={status.value}>
                             {status.label}
                           </option>
                         ))}
                       </select>
+                    </div>
                     </td>
                     <td>
                       <strong className={getQuotationPrice(quotation) ? "price-value" : "price-placeholder"}>
