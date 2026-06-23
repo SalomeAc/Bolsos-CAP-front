@@ -11,7 +11,10 @@ export function CotizacionesPage() {
   const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
 
   const [quotations, setQuotations] = useState([]);
-  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [selectedQuotationId, setSelectedQuotationId] = useState(null);
+  const selectedQuotation = quotations.find(
+    (q) => q._id === selectedQuotationId,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,13 +34,10 @@ export function CotizacionesPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getAllQuotations(token);
-        setQuotations(data);
 
-        // Seleccionar la primera cotización por defecto
-        if (data.length > 0 && !selectedQuotation) {
-          setSelectedQuotation(data[0]);
-        }
+        const data = await getAllQuotations(token);
+
+        setQuotations(data);
       } catch (err) {
         console.error("Error loading quotations:", err);
         setError(err.message);
@@ -48,19 +48,25 @@ export function CotizacionesPage() {
 
     loadQuotations();
 
-    // Poll cada 10 segundos
     const interval = setInterval(loadQuotations, 10000);
+
     return () => clearInterval(interval);
   }, [token, userIsAdmin]);
 
-  // Actualizar cotización seleccionada cuando cambia la lista
   useEffect(() => {
-    if (selectedQuotation) {
-      const updated = quotations.find((q) => q._id === selectedQuotation._id);
-      if (updated) {
-        setSelectedQuotation(updated);
+    if (quotations.length === 0) return;
+
+    setSelectedQuotationId((currentId) => {
+      if (currentId) {
+        const exists = quotations.some((q) => q._id === currentId);
+
+        if (exists) {
+          return currentId;
+        }
       }
-    }
+
+      return quotations[0]._id;
+    });
   }, [quotations]);
 
   // Filtrar cotizaciones por búsqueda
@@ -121,8 +127,8 @@ export function CotizacionesPage() {
           {sortedQuotations.map((quotation) => (
             <div
               key={quotation._id}
-              className={`quotation-item ${selectedQuotation?._id === quotation._id ? "active" : ""}`}
-              onClick={() => setSelectedQuotation(quotation)}
+              className={`quotation-item ${selectedQuotationId === quotation._id ? "active" : ""}`}
+              onClick={() => setSelectedQuotationId(quotation._id)}
             >
               <div className="quotation-item-avatar">
                 {quotation.user?.firstName?.[0]?.toUpperCase() || "C"}

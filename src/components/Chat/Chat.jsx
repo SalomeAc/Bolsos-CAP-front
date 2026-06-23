@@ -24,16 +24,22 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // Auto-scroll al final cuando hay nuevos mensajes
+  // Auto-scroll al final solo si el usuario está al final
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      // Solo scroll si está casi al final (menos de 100px del bottom)
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Cargar mensajes al montar el componente
+  // Cargar mensajes al montar el componente con polling para nuevos mensajes
   useEffect(() => {
     if (!quotationId || !token) return;
 
@@ -42,7 +48,16 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
         setLoading(true);
         setError(null);
         const data = await getLatestMessages(quotationId, token, 100);
-        setMessages(data);
+        setMessages((current) => {
+          const currentIds = current.map((m) => m._id).join(",");
+          const newIds = data.map((m) => m._id).join(",");
+
+          if (currentIds === newIds) {
+            return current;
+          }
+
+          return data;
+        });
       } catch (err) {
         console.error("Error loading messages:", err);
         setError(err.message);
@@ -235,48 +250,59 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
               <div key={date}>
                 <div className="chat-date-separator">{date}</div>
                 {msgs.map((msg) => (
-                  <div
-                    key={msg._id}
-                    className={`chat-message ${msg.sender._id === userId ? "sent" : "received"}`}
-                  >
-                    <div className="chat-message-header">
-                      <span className="chat-sender-name">
-                        {msg.sender._id === userId
-                          ? "Tú"
-                          : msg.sender.firstName}
-                      </span>
-                      <span className="chat-message-time">
-                        {formatTime(msg.createdAt)}
-                      </span>
-                      {msg.sender._id === userId && (
-                        <button
-                          className="chat-delete-btn"
-                          onClick={() => handleDeleteMessage(msg._id)}
-                          title="Eliminar mensaje"
-                          aria-label="Eliminar mensaje"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                    <div className="chat-message-content">{msg.content}</div>
-                    {msg.attachments && msg.attachments.length > 0 && (
-                      <div className="chat-message-attachments">
-                        {msg.attachments.map((attachment, idx) => (
-                          <a
-                            key={idx}
-                            href={attachment}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="chat-attachment"
-                          >
-                            📎 Ver adjunto
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+  <div
+    key={msg._id}
+    className={`chat-message ${
+      msg.isSystemMessage
+        ? "system"
+        : msg.sender._id === userId
+          ? "sent"
+          : "received"
+    }`}
+  >
+    {/* HEADER */}
+    <div className="chat-message-header">
+      <span className="chat-sender-name">
+        {msg.sender._id === userId ? "Tú" : msg.sender.firstName}
+      </span>
+      <span className="chat-message-time">
+        {formatTime(msg.createdAt)}
+      </span>
+    </div>
+
+    {/* CONTENIDO (AQUÍ VAN LOS \n) */}
+    <div className="chat-message-content">
+      {msg.content}
+    </div>
+
+    {/* ATTACHMENTS */}
+    {msg.attachments?.length > 0 && (
+      <div className="chat-message-attachments">
+        {msg.attachments.map((attachment, idx) => (
+          <a
+            key={idx}
+            href={attachment}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="chat-attachment"
+          >
+            📎 Ver adjunto
+          </a>
+        ))}
+      </div>
+    )}
+
+    {/* DELETE BUTTON */}
+    {msg.sender._id === userId && (
+      <button
+        className="chat-delete-btn"
+        onClick={() => handleDeleteMessage(msg._id)}
+      >
+        ✕
+      </button>
+    )}
+  </div>
+))}
               </div>
             ))}
             <div ref={messagesEndRef} />
