@@ -11,6 +11,7 @@ const getNavLinks = (isAdmin) => {
   if (isAdmin) {
     baseLinks.push({ to: "/cotizaciones", label: "Cotizaciones" });
   } else {
+    baseLinks.push({ to: "/cotizar", label: "Cotizar" });
     baseLinks.push({ to: "/mis-cotizaciones", label: "Mis Cotizaciones" });
   }
   return baseLinks;
@@ -74,7 +75,7 @@ export function Navigation() {
           </>
         ) : (
           <Link className="header-login" to="/login">
-            Incia Sesión
+            Iniciar Sesión
           </Link>
         )}
       </div>

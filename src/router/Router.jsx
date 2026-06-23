@@ -17,7 +17,8 @@ import { CotizacionesPage } from "../pages/CotizacionesPage/CotizacionesPage.jsx
 import { MisCotizacionesPage } from "../pages/MisCotizacionesPage/MisCotizacionesPage.jsx";
 import { ProductPage } from "../pages/ProductPage/ProductPage.jsx";
 import { useProductsStore } from "../store/useProductsStore.js";
-import { useAuthStore } from "../store/useAuthStore.js";
+import { useAuthStore, isTokenExpired } from "../store/useAuthStore.js";
+import { CotizarPage } from "../pages/CotizarPage/CotizarPage.jsx";
 
 function ProductRoute() {
   const { code } = useParams();
@@ -37,12 +38,21 @@ function ProductRoute() {
 // Componente protegido que guarda la página anterior si no está logueado
 function ProtectedRoute({ element, requiresAuth = false }) {
   const token = useAuthStore((state) => state.authToken);
+  const logout = useAuthStore((state) => state.logout)
   const setReturnPath = useAuthStore((state) => state.setReturnPath);
   const location = useLocation();
 
-  if (requiresAuth && !token) {
-    setReturnPath(location.pathname);
-    return <Navigate to="/login" replace />;
+  if (requiresAuth) {
+    if (!token) {
+      setReturnPath(location.pathname)
+      return <Navigate to="/login" replace />
+    }
+
+    if (isTokenExpired(token)) {
+      setReturnPath(location.pathname)
+      logout()
+      return <Navigate to="/login" replace />
+    }
   }
 
   return element;
@@ -99,6 +109,12 @@ export default function Router() {
             element={<MisCotizacionesPage />}
             requiresAuth={true}
           />
+        }
+      />
+      <Route
+        path="/cotizar"
+        element={
+          <ProtectedRoute element={<CotizarPage />} requiresAuth={true} />
         }
       />
       <Route path="/product/:code" element={<ProductRoute />} />
