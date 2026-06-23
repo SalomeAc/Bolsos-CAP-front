@@ -231,6 +231,16 @@ input[type="date"]:focus {
   text-transform: capitalize;
 }
 
+.status-select{
+    border:none;
+    border-radius:20px;
+    padding:.5rem .9rem;
+    font-weight:700;
+    cursor:pointer;
+    font-size:.8rem;
+    outline:none;
+}
+
 .status-pendiente {
   background: #fff3cd;
   color: #856404;

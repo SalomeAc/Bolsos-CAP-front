@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllQuotations } from "../../services/quotationService";
+import {
+  getAllQuotations,
+  updateQuotationStatus,
+} from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import "./HistorialCotizacionesPage.css";
 
@@ -116,6 +119,23 @@ export function HistorialCotizacionesPage() {
 
     loadQuotations();
   }, [token, userIsAdmin]);
+
+  const handleStatusChange = async (quotationId, newStatus) => {
+  try {
+    await updateQuotationStatus(quotationId, newStatus, token);
+
+    setQuotations((prev) =>
+      prev.map((quotation) =>
+        quotation._id === quotationId
+          ? { ...quotation, status: newStatus }
+          : quotation
+      )
+    );
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo actualizar el estado");
+  }
+};
 
   const filteredQuotations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -265,9 +285,23 @@ export function HistorialCotizacionesPage() {
                     </td>
                     <td>{formatDate(quotation?.createdAt)}</td>
                     <td>
-                      <span className={`status-badge status-${quotation?.status || "pendiente"}`}>
-                        {getStatusLabel(quotation?.status)}
-                      </span>
+                      <select
+                        className={`status-select status-${quotation.status}`}
+                        value={quotation.status}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={(event) =>
+                          handleStatusChange(
+                            quotation._id,
+                            event.target.value
+                          )
+                        }
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status.value} value={status.value}>
+                            {status.label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <strong className={getQuotationPrice(quotation) ? "price-value" : "price-placeholder"}>
