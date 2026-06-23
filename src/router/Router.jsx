@@ -14,6 +14,7 @@ import { QuotationSummaryPage } from "../pages/QuotationSummaryPage/QuotationSum
 import { QuotationDetailPage } from "../pages/QuotationDetailPage/QuotationDetailPage.jsx";
 import { AdminMessagesPage } from "../pages/AdminMessagesPage/AdminMessagesPage.jsx";
 import { CotizacionesPage } from "../pages/CotizacionesPage/CotizacionesPage.jsx";
+import { HistorialCotizacionesPage } from "../pages/HistorialCotizacionesPage/HistorialCotizacionesPage.jsx";
 import { MisCotizacionesPage } from "../pages/MisCotizacionesPage/MisCotizacionesPage.jsx";
 import { ProductPage } from "../pages/ProductPage/ProductPage.jsx";
 import { useProductsStore } from "../store/useProductsStore.js";
@@ -90,6 +91,15 @@ export default function Router() {
         path="/cotizaciones"
         element={
           <ProtectedRoute element={<CotizacionesPage />} requiresAuth={true} />
+        }
+      />
+      <Route
+        path="/admin/historial-cotizaciones"
+        element={
+          <ProtectedRoute
+            element={<HistorialCotizacionesPage />}
+            requiresAuth={true}
+          />
         }
       />
       <Route
