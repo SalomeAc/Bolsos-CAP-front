@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCustomQuotationForm } from "../../services/quotationService.js";
 import { useAuthStore } from "../../store/useAuthStore.js";
+import { useAzureDictation } from "../../hooks/useAzureDictation.js";
 import "./CotizarPage.css";
+
 
 const REQUIRED_ERROR = "Este campo es obligatorio y no puede estar vacío";
 
@@ -160,6 +162,25 @@ export function CotizarPage() {
     }
   };
 
+  const appendObservacion = useCallback((spokenText) => {
+    setFormState((current) => {
+      const prefix = current.observaciones.trim();
+      const separator = prefix ? " " : "";
+      return {
+        ...current,
+        observaciones: `${prefix}${separator}${spokenText}`.trimStart(),
+      };
+    });
+  }, []);
+
+  const { isListening, interimText, speechError, toggleListening, clearSpeechError } = useAzureDictation({
+    language: "es-ES",
+    authToken: token,
+    useBackendToken: false,
+    onFinalText: appendObservacion,
+  });
+  
+
   if (isAdmin) {
     navigate("/cotizaciones", { replace: true });
     return null;
@@ -315,44 +336,65 @@ export function CotizarPage() {
               </div>
             </div>
 
-            {/* Observaciones (opcional) + micrófono */}
             <div className="cotizar-field cotizar-field--full">
-              <span className="cotizar-field-label">
-                Observaciones <span>(opcional)</span>
-              </span>
-              <div className="observaciones-row">
-                <textarea
-                  name="observaciones"
-                  value={formState.observaciones}
-                  onChange={handleChange}
-                  placeholder="Detalles adicionales sobre tu bolso..."
-                  rows={4}
-                />
-                <button
-                  type="button"
-                  className="mic-button"
-                  aria-label="Dictar observaciones (próximamente)"
-                  title="Dictado por voz (próximamente)"
-                  disabled
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden="true"
+                <span className="cotizar-field-label">
+                  Observaciones <span>(opcional)</span>
+                </span>
+                <div className="observaciones-row">
+                  <textarea
+                    name="observaciones"
+                    value={formState.observaciones}
+                    onChange={handleChange}
+                    placeholder="Detalles adicionales sobre tu bolso..."
+                    rows={4}
+                    aria-describedby="observaciones-speech-status"
+                  />
+                  <button
+                    type="button"
+                    className={`mic-button${isListening ? " mic-button--listening" : ""}`}
+                    onClick={toggleListening}
+                    aria-label={isListening ? "Detener dictado" : "Dictar observaciones"}
+                    aria-pressed={isListening}
+                    title={isListening ? "Detener dictado" : "Dictar observaciones"}
                   >
-                    <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                    <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                    <line x1="12" y1="19" x2="12" y2="23" />
-                    <line x1="8" y1="23" x2="16" y2="23" />
-                  </svg>
-                </button>
-              </div>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+                      <line x1="12" y1="19" x2="12" y2="23" />
+                      <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
+                  </button>
+                </div>
+                <p
+                  id="observaciones-speech-status"
+                  className={`speech-status${isListening ? " speech-status--active" : ""}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {isListening
+                    ? interimText
+                      ? `Escuchando: ${interimText}…`
+                      : "Escuchando… habla ahora."
+                    : "Pulsa el micrófono para dictar observaciones."}
+                </p>
+                {speechError ? (
+                  <p className="field-error speech-error" role="alert">
+                    {speechError}{" "}
+                    <button type="button" className="speech-error-dismiss" onClick={clearSpeechError}>
+                      Cerrar
+                    </button>
+                  </p>
+                ) : null}
             </div>
-          </div>
+            </div>
 
           {submitError ? (
             <p className="submit-error" role="alert">
