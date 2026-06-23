@@ -6,6 +6,8 @@ import {
 } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import "./HistorialCotizacionesPage.css";
+import VoiceButton from "../../components/VoiceButton/VoiceButton";
+import "../../components/VoiceButton/VoiceButton.css";
 
 const statusOptions = [
   { value: "pendiente", label: "Pendiente" },
@@ -14,6 +16,32 @@ const statusOptions = [
   { value: "completada", label: "Completada" },
   { value: "cancelada", label: "Cancelada" },
 ];
+
+const VOICE_STATUS_MAP = {
+  pendiente: "pendiente",
+  "revisión": "en_revision",
+  revision: "en_revision",
+  "producción": "en_produccion",
+  produccion: "en_produccion",
+  completada: "completada",
+  cancelada: "cancelada",
+};
+
+function toPhonetic(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ph/g, "f")
+    .replace(/y$/g, "i")
+    .replace(/ll/g, "i")
+    .replace(/[^a-z0-9 ]/g, "");
+}
+
+function phoneticIncludes(text, term) {
+  if (!term) return true;
+  return toPhonetic(text).includes(toPhonetic(term));
+}
 
 function getStatusLabel(status) {
   const labels = {
@@ -27,21 +55,13 @@ function getStatusLabel(status) {
     completada: "Completada",
     cancelada: "Cancelada",
   };
-
   return labels[status] || status || "Sin estado";
 }
 
 function formatDate(value) {
-  if (!value) {
-    return "Sin fecha";
-  }
-
+  if (!value) return "Sin fecha";
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Sin fecha";
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return "Sin fecha";
   return parsedDate.toLocaleDateString("es-CO", {
     year: "numeric",
     month: "short",
@@ -55,13 +75,11 @@ function getQuotationPrice(quotation) {
 
 function formatPrice(quotation) {
   const price = getQuotationPrice(quotation);
-
-  if (price === null || price === undefined) {
-    return "Pendiente de cotizar";
-  }
-
-  const currency = quotation?.finalQuotation?.currency || quotation?.aiQuotation?.currency || "COP";
-
+  if (price === null || price === undefined) return "Pendiente de cotizar";
+  const currency =
+    quotation?.finalQuotation?.currency ||
+    quotation?.aiQuotation?.currency ||
+    "COP";
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency,
@@ -72,7 +90,6 @@ function formatPrice(quotation) {
 function getCustomerName(quotation) {
   const firstName = quotation?.user?.firstName || "Cliente";
   const lastName = quotation?.user?.lastName || "";
-
   return `${firstName} ${lastName}`.trim();
 }
 
@@ -84,21 +101,27 @@ export function HistorialCotizacionesPage() {
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filtros manuales
   const [searchTerm, setSearchTerm] = useState("");
   const [productFilter, setProductFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
+
+  // Filtro de voz — completamente separado, no interfiere con los manuales
+  const [voiceQuery, setVoiceQuery] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState("all");
+  const [isListening, setIsListening] = useState(false);
+
+  // Feedback visual del texto reconocido (de la versión 2)
+  const [voiceLabel, setVoiceLabel] = useState(null);
+
   useEffect(() => {
-    if (!userIsAdmin) {
-      navigate("/");
-    }
+    if (!userIsAdmin) navigate("/");
   }, [userIsAdmin, navigate]);
 
   useEffect(() => {
-    if (!token || !userIsAdmin) {
-      return;
-    }
-
+    if (!token || !userIsAdmin) return;
     const loadQuotations = async () => {
       try {
         setLoading(true);
@@ -112,26 +135,53 @@ export function HistorialCotizacionesPage() {
         setLoading(false);
       }
     };
-
     loadQuotations();
   }, [token, userIsAdmin]);
 
-  const handleStatusChange = async (quotationId, newStatus) => {
-  try {
-    await updateQuotationStatus(quotationId, newStatus, token);
+  const handleVoiceResult = (text) => {
+    const command = text.replace(/\.$/, "").trim();
+    let remaining = command;
+    let detectedStatus = "all";
 
-    setQuotations((prev) =>
-      prev.map((quotation) =>
-        quotation._id === quotationId
-          ? { ...quotation, status: newStatus }
-          : quotation
-      )
-    );
-  } catch (error) {
-    console.error(error);
-    alert("No se pudo actualizar el estado");
-  }
-};
+    for (const [keyword, statusValue] of Object.entries(VOICE_STATUS_MAP)) {
+      if (toPhonetic(command).includes(toPhonetic(keyword))) {
+        detectedStatus = statusValue;
+        remaining = remaining
+          .toLowerCase()
+          .replace(keyword, "")
+          .trim();
+        break;
+      }
+    }
+
+    setVoiceQuery(remaining);
+    setVoiceStatus(detectedStatus);
+    setIsListening(false);
+
+    // Feedback visual morado con el texto reconocido (versión 2)
+    setVoiceLabel(text);
+    setTimeout(() => setVoiceLabel(null), 3000);
+  };
+
+  const clearVoice = () => {
+    setVoiceQuery("");
+    setVoiceStatus("all");
+    setVoiceLabel(null);
+  };
+
+  const handleStatusChange = async (quotationId, newStatus) => {
+    try {
+      await updateQuotationStatus(quotationId, newStatus, token);
+      setQuotations((prev) =>
+        prev.map((q) =>
+          q._id === quotationId ? { ...q, status: newStatus } : q
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo actualizar el estado");
+    }
+  };
 
   const filteredQuotations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -139,49 +189,61 @@ export function HistorialCotizacionesPage() {
 
     return [...quotations]
       .filter((quotation) => {
-        const customerName = getCustomerName(quotation).toLowerCase();
-        const customerEmail = (quotation?.user?.email || "").toLowerCase();
-
+        const customerName = getCustomerName(quotation);
+        const customerEmail = quotation?.user?.email || "";
         const productName =
-        quotation?.kind === "catalog"
-          ? (quotation?.product?.name || "").toLowerCase()
-          : "personalizado";
+          quotation?.kind === "catalog"
+            ? quotation?.product?.name || ""
+            : "personalizado";
+        const productType =
+          quotation?.kind === "catalog"
+            ? "cotización de catálogo"
+            : quotation?.customProduct?.description || "";
 
-      const productType =
-        quotation?.kind === "catalog"
-          ? "cotización de catálogo"
-          : (quotation?.customProduct?.description || "").toLowerCase();
-
-      const matchesProduct =
-        normalizedProduct.length === 0 ||
-        productName.includes(normalizedProduct) ||
-        productType.includes(normalizedProduct);
+        // Filtros manuales
         const matchesSearch =
           normalizedSearch.length === 0 ||
-          customerName.includes(normalizedSearch) ||
-          customerEmail.includes(normalizedSearch);
+          customerName.toLowerCase().includes(normalizedSearch) ||
+          customerEmail.toLowerCase().includes(normalizedSearch);
+
+        const matchesProduct =
+          normalizedProduct.length === 0 ||
+          productName.toLowerCase().includes(normalizedProduct) ||
+          productType.toLowerCase().includes(normalizedProduct);
+
         const matchesStatus =
           statusFilter === "all" || quotation?.status === statusFilter;
-        const quotationDate = quotation?.createdAt
-        ? new Date(quotation.createdAt).toISOString().split("T")[0]
-        : "";
 
         const matchesDate =
           !dateFilter ||
           new Date(quotation.createdAt).toLocaleDateString("en-CA") === dateFilter;
 
-        return matchesSearch && matchesStatus && matchesDate && matchesProduct;
-      })
-      .sort((quotationA, quotationB) => {
-        const dateA = new Date(quotationA?.createdAt || 0).getTime();
-        const dateB = new Date(quotationB?.createdAt || 0).getTime();
-        return dateB - dateA;
-      });
-  }, [quotations, searchTerm, statusFilter, dateFilter, productFilter]);
+        // Filtro de voz (fonético, independiente)
+        const matchesVoiceQuery =
+          voiceQuery.trim().length === 0 ||
+          phoneticIncludes(customerName, voiceQuery) ||
+          phoneticIncludes(customerEmail, voiceQuery) ||
+          phoneticIncludes(productName, voiceQuery) ||
+          phoneticIncludes(productType, voiceQuery);
 
-  if (!userIsAdmin) {
-    return null;
-  }
+        const matchesVoiceStatus =
+          voiceStatus === "all" || quotation?.status === voiceStatus;
+
+        return (
+          matchesSearch &&
+          matchesProduct &&
+          matchesStatus &&
+          matchesDate &&
+          matchesVoiceQuery &&
+          matchesVoiceStatus
+        );
+      })
+      .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
+  }, [quotations, searchTerm, productFilter, statusFilter, dateFilter, voiceQuery, voiceStatus]);
+
+  if (!userIsAdmin) return null;
+
+  const hasVoiceFilter = voiceQuery.trim().length > 0 || voiceStatus !== "all";
 
   return (
     <section className="historial-cotizaciones-page">
@@ -191,13 +253,58 @@ export function HistorialCotizacionesPage() {
           <h1>Historial de cotizaciones</h1>
           <p>Consulta el resumen completo de las cotizaciones registradas</p>
         </div>
-
         <div className="historial-summary">
           <strong>{filteredQuotations.length}</strong>
           <span>Cotizaciones</span>
         </div>
       </header>
 
+      {/* Sección de voz separada (versión 1) + feedback de texto (versión 2) */}
+      <div className="voice-search-section">
+        <div className="voice-search-bar">
+          <VoiceButton
+            onResult={handleVoiceResult}
+            onStart={() => setIsListening(true)}
+          />
+          <div className="voice-search-display">
+            {isListening ? (
+              <span className="voice-listening">Escuchando...</span>
+            ) : hasVoiceFilter ? (
+              <>
+                {voiceQuery && (
+                  <span className="voice-term">"{voiceQuery}"</span>
+                )}
+                {voiceStatus !== "all" && (
+                  <span className="voice-badge">
+                    {getStatusLabel(voiceStatus)}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="voice-placeholder">
+                Di un nombre, producto o estado para filtrar...
+              </span>
+            )}
+          </div>
+          {hasVoiceFilter && (
+            <button
+              type="button"
+              className="voice-clear"
+              onClick={clearVoice}
+              aria-label="Limpiar búsqueda por voz"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Feedback visual morado del texto reconocido (versión 2) */}
+        {voiceLabel && (
+          <span className="voice-feedback">🎙 "{voiceLabel}"</span>
+        )}
+      </div>
+
+      {/* Filtros manuales */}
       <section className="historial-filters" aria-label="Filtros del historial">
         <div className="filter-group">
           <label htmlFor="search-quotation">Buscar cliente</label>
@@ -207,22 +314,21 @@ export function HistorialCotizacionesPage() {
             type="search"
             placeholder="Nombre o correo del cliente"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="filter-group">
-        <label htmlFor="product-filter">Producto / tipo</label>
-
-        <input
-          id="product-filter"
-          className="search-input"
-          type="search"
-          placeholder="Bolso Bloom, personalizado, etc."
-          value={productFilter}
-          onChange={(event) => setProductFilter(event.target.value)}
-        />
-      </div>
+          <label htmlFor="product-filter">Producto / tipo</label>
+          <input
+            id="product-filter"
+            className="search-input"
+            type="search"
+            placeholder="Bolso Bloom, personalizado, etc."
+            value={productFilter}
+            onChange={(e) => setProductFilter(e.target.value)}
+          />
+        </div>
 
         <div className="filter-group">
           <label htmlFor="status-filter">Estado</label>
@@ -230,7 +336,7 @@ export function HistorialCotizacionesPage() {
             id="status-filter"
             className="select-input"
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="all">Todos los estados</option>
             {statusOptions.map((status) => (
@@ -242,15 +348,15 @@ export function HistorialCotizacionesPage() {
         </div>
 
         <div className="filter-group">
-        <label htmlFor="date-filter">Fecha</label>
-        <input
-          id="date-filter"
-          className="search-input"
-          type="date"
-          value={dateFilter}
-          onChange={(event) => setDateFilter(event.target.value)}
-        />
-      </div>
+          <label htmlFor="date-filter">Fecha</label>
+          <input
+            id="date-filter"
+            className="search-input"
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          />
+        </div>
       </section>
 
       <section className="historial-table-card">
@@ -304,34 +410,46 @@ export function HistorialCotizacionesPage() {
                     </td>
                     <td>
                       <div className="product-cell">
-                        <strong>{quotation?.kind === "catalog" ? quotation?.product?.name || "Sin producto" : "Personalizado"}</strong>
-                        <span>{quotation?.kind === "catalog" ? "Cotización de catálogo" : quotation?.customProduct?.description || "Solicitud personalizada"}</span>
+                        <strong>
+                          {quotation?.kind === "catalog"
+                            ? quotation?.product?.name || "Sin producto"
+                            : "Personalizado"}
+                        </strong>
+                        <span>
+                          {quotation?.kind === "catalog"
+                            ? "Cotización de catálogo"
+                            : quotation?.customProduct?.description ||
+                              "Solicitud personalizada"}
+                        </span>
                       </div>
                     </td>
                     <td>{formatDate(quotation?.createdAt)}</td>
                     <td>
-                      <div className={`status-select-wrapper`}>
+                      <div className="status-select-wrapper">
                         <select
                           className={`status-select status-${quotation.status}`}
                           value={quotation.status}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={(event) =>
-                            handleStatusChange(
-                              quotation._id,
-                              event.target.value
-                            )
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) =>
+                            handleStatusChange(quotation._id, e.target.value)
                           }
                         >
-                        {statusOptions.map((status) => (
-                          <option key={status.value} value={status.value}>
-                            {status.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                          {statusOptions.map((status) => (
+                            <option key={status.value} value={status.value}>
+                              {status.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </td>
                     <td>
-                      <strong className={getQuotationPrice(quotation) ? "price-value" : "price-placeholder"}>
+                      <strong
+                        className={
+                          getQuotationPrice(quotation)
+                            ? "price-value"
+                            : "price-placeholder"
+                        }
+                      >
                         {formatPrice(quotation)}
                       </strong>
                     </td>
