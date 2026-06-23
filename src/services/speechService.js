@@ -14,21 +14,20 @@ export const recognizeSpeech = () =>
 
     const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
 
-    const recognizer = new SpeechSDK.SpeechRecognizer(
-      speechConfig,
-      audioConfig,
-    );
+    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
     recognizer.recognizeOnceAsync((result) => {
-      console.log(result);
-      console.log("Reason:", result.reason);
-      console.log("Text:", result.text);
+      recognizer.close();
 
       if (result.text) {
         resolve(result.text);
       } else {
-        reject(new Error("No se reconoció voz"));
+
+        reject(new Error("No se detectó voz. Intenta de nuevo."));
       }
+    }, (error) => {
+      recognizer.close();
+      reject(new Error(error));
     });
   });
 
