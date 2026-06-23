@@ -85,6 +85,92 @@
   box-shadow: 0 8px 24px rgba(44, 36, 56, 0.05);
 }
 
+/* --- Sección de voz separada --- */
+.voice-search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #f0ece8;
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 8px 24px rgba(44, 36, 56, 0.05);
+}
+
+.voice-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.voice-search-display {
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem;
+  background: #fdfcff;
+  border: 1px solid #ece6f8;
+  border-radius: 12px;
+}
+
+.voice-placeholder {
+  font-size: 0.88rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+.voice-listening {
+  font-size: 0.88rem;
+  color: #764ba2;
+  font-weight: 600;
+}
+
+.voice-term {
+  font-size: 0.88rem;
+  color: #2c2438;
+  font-weight: 500;
+}
+
+.voice-badge {
+  background: #e4ddfb;
+  color: #4b3586;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+}
+
+.voice-clear {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #e0d5f0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.voice-clear:hover {
+  background: #f5f0ff;
+  color: #764ba2;
+}
+
+/* Feedback de texto reconocido (versión 2) */
+.voice-feedback {
+  display: block;
+  font-size: 0.78rem;
+  color: #764ba2;
+  font-style: italic;
+  padding-left: 0.25rem;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;

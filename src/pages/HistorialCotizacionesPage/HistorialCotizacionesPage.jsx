@@ -17,16 +17,31 @@ const statusOptions = [
   { value: "cancelada", label: "Cancelada" },
 ];
 
-// Palabras clave de voz → valor del enum de estado
 const VOICE_STATUS_MAP = {
-  "pendiente": "pendiente",
+  pendiente: "pendiente",
   "revisión": "en_revision",
-  "revision": "en_revision",
+  revision: "en_revision",
   "producción": "en_produccion",
-  "produccion": "en_produccion",
-  "completada": "completada",
-  "cancelada": "cancelada",
+  produccion: "en_produccion",
+  completada: "completada",
+  cancelada: "cancelada",
 };
+
+function toPhonetic(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ph/g, "f")
+    .replace(/y$/g, "i")
+    .replace(/ll/g, "i")
+    .replace(/[^a-z0-9 ]/g, "");
+}
+
+function phoneticIncludes(text, term) {
+  if (!term) return true;
+  return toPhonetic(text).includes(toPhonetic(term));
+}
 
 function getStatusLabel(status) {
   const labels = {
@@ -86,11 +101,20 @@ export function HistorialCotizacionesPage() {
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filtros manuales
   const [searchTerm, setSearchTerm] = useState("");
   const [productFilter, setProductFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
-  const [voiceLabel, setVoiceLabel] = useState(null); // feedback visual
+
+  // Filtro de voz — completamente separado, no interfiere con los manuales
+  const [voiceQuery, setVoiceQuery] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState("all");
+  const [isListening, setIsListening] = useState(false);
+
+  // Feedback visual del texto reconocido (de la versión 2)
+  const [voiceLabel, setVoiceLabel] = useState(null);
 
   useEffect(() => {
     if (!userIsAdmin) navigate("/");
@@ -98,7 +122,6 @@ export function HistorialCotizacionesPage() {
 
   useEffect(() => {
     if (!token || !userIsAdmin) return;
-
     const loadQuotations = async () => {
       try {
         setLoading(true);
@@ -112,44 +135,38 @@ export function HistorialCotizacionesPage() {
         setLoading(false);
       }
     };
-
     loadQuotations();
   }, [token, userIsAdmin]);
 
-  // --- Lógica de voz: dentro del componente para acceder a los setters ---
-  // Detecta si el texto contiene una palabra clave de estado y aplica el
-  // filtro correspondiente. El resto del texto se usa para buscar cliente
-  // o producto. Así un solo micrófono sirve para todos los filtros.
   const handleVoiceResult = (text) => {
-    const command = text.toLowerCase().replace(/\.$/, "").trim();
-    let appliedStatus = null;
+    const command = text.replace(/\.$/, "").trim();
+    let remaining = command;
+    let detectedStatus = "all";
 
-    // 1. ¿Menciona un estado?
     for (const [keyword, statusValue] of Object.entries(VOICE_STATUS_MAP)) {
-      if (command.includes(keyword)) {
-        setStatusFilter(statusValue);
-        appliedStatus = statusValue;
+      if (toPhonetic(command).includes(toPhonetic(keyword))) {
+        detectedStatus = statusValue;
+        remaining = remaining
+          .toLowerCase()
+          .replace(keyword, "")
+          .trim();
         break;
       }
     }
 
-    // 2. El texto restante (sin la palabra de estado) va al buscador general
-    let remaining = command;
-    if (appliedStatus) {
-      for (const keyword of Object.keys(VOICE_STATUS_MAP)) {
-        remaining = remaining.replace(keyword, "").trim();
-      }
-    }
+    setVoiceQuery(remaining);
+    setVoiceStatus(detectedStatus);
+    setIsListening(false);
 
-    if (remaining) {
-      // Busca en cliente Y producto a la vez con el mismo término
-      setSearchTerm(remaining);
-      setProductFilter(remaining);
-    }
-
-    // Feedback visual de lo que se escuchó
+    // Feedback visual morado con el texto reconocido (versión 2)
     setVoiceLabel(text);
     setTimeout(() => setVoiceLabel(null), 3000);
+  };
+
+  const clearVoice = () => {
+    setVoiceQuery("");
+    setVoiceStatus("all");
+    setVoiceLabel(null);
   };
 
   const handleStatusChange = async (quotationId, newStatus) => {
@@ -172,26 +189,27 @@ export function HistorialCotizacionesPage() {
 
     return [...quotations]
       .filter((quotation) => {
-        const customerName = getCustomerName(quotation).toLowerCase();
-        const customerEmail = (quotation?.user?.email || "").toLowerCase();
+        const customerName = getCustomerName(quotation);
+        const customerEmail = quotation?.user?.email || "";
         const productName =
           quotation?.kind === "catalog"
-            ? (quotation?.product?.name || "").toLowerCase()
+            ? quotation?.product?.name || ""
             : "personalizado";
         const productType =
           quotation?.kind === "catalog"
             ? "cotización de catálogo"
-            : (quotation?.customProduct?.description || "").toLowerCase();
+            : quotation?.customProduct?.description || "";
 
+        // Filtros manuales
         const matchesSearch =
           normalizedSearch.length === 0 ||
-          customerName.includes(normalizedSearch) ||
-          customerEmail.includes(normalizedSearch);
+          customerName.toLowerCase().includes(normalizedSearch) ||
+          customerEmail.toLowerCase().includes(normalizedSearch);
 
         const matchesProduct =
           normalizedProduct.length === 0 ||
-          productName.includes(normalizedProduct) ||
-          productType.includes(normalizedProduct);
+          productName.toLowerCase().includes(normalizedProduct) ||
+          productType.toLowerCase().includes(normalizedProduct);
 
         const matchesStatus =
           statusFilter === "all" || quotation?.status === statusFilter;
@@ -200,14 +218,32 @@ export function HistorialCotizacionesPage() {
           !dateFilter ||
           new Date(quotation.createdAt).toLocaleDateString("en-CA") === dateFilter;
 
-        return matchesSearch && matchesProduct && matchesStatus && matchesDate;
+        // Filtro de voz (fonético, independiente)
+        const matchesVoiceQuery =
+          voiceQuery.trim().length === 0 ||
+          phoneticIncludes(customerName, voiceQuery) ||
+          phoneticIncludes(customerEmail, voiceQuery) ||
+          phoneticIncludes(productName, voiceQuery) ||
+          phoneticIncludes(productType, voiceQuery);
+
+        const matchesVoiceStatus =
+          voiceStatus === "all" || quotation?.status === voiceStatus;
+
+        return (
+          matchesSearch &&
+          matchesProduct &&
+          matchesStatus &&
+          matchesDate &&
+          matchesVoiceQuery &&
+          matchesVoiceStatus
+        );
       })
-      .sort((a, b) => {
-        return new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0);
-      });
-  }, [quotations, searchTerm, productFilter, statusFilter, dateFilter]);
+      .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
+  }, [quotations, searchTerm, productFilter, statusFilter, dateFilter, voiceQuery, voiceStatus]);
 
   if (!userIsAdmin) return null;
+
+  const hasVoiceFilter = voiceQuery.trim().length > 0 || voiceStatus !== "all";
 
   return (
     <section className="historial-cotizaciones-page">
@@ -223,22 +259,63 @@ export function HistorialCotizacionesPage() {
         </div>
       </header>
 
+      {/* Sección de voz separada (versión 1) + feedback de texto (versión 2) */}
+      <div className="voice-search-section">
+        <div className="voice-search-bar">
+          <VoiceButton
+            onResult={handleVoiceResult}
+            onStart={() => setIsListening(true)}
+          />
+          <div className="voice-search-display">
+            {isListening ? (
+              <span className="voice-listening">Escuchando...</span>
+            ) : hasVoiceFilter ? (
+              <>
+                {voiceQuery && (
+                  <span className="voice-term">"{voiceQuery}"</span>
+                )}
+                {voiceStatus !== "all" && (
+                  <span className="voice-badge">
+                    {getStatusLabel(voiceStatus)}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="voice-placeholder">
+                Di un nombre, producto o estado para filtrar...
+              </span>
+            )}
+          </div>
+          {hasVoiceFilter && (
+            <button
+              type="button"
+              className="voice-clear"
+              onClick={clearVoice}
+              aria-label="Limpiar búsqueda por voz"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Feedback visual morado del texto reconocido (versión 2) */}
+        {voiceLabel && (
+          <span className="voice-feedback">🎙 "{voiceLabel}"</span>
+        )}
+      </div>
+
+      {/* Filtros manuales */}
       <section className="historial-filters" aria-label="Filtros del historial">
         <div className="filter-group">
           <label htmlFor="search-quotation">Buscar cliente</label>
-          <div className="catalog-search">
-            <input
-              id="search-quotation"
-              type="search"
-              placeholder="Nombre o correo del cliente"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <VoiceButton onResult={handleVoiceResult} />
-          </div>
-          {voiceLabel && (
-            <span className="voice-feedback">🎙 "{voiceLabel}"</span>
-          )}
+          <input
+            id="search-quotation"
+            className="search-input"
+            type="search"
+            placeholder="Nombre o correo del cliente"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
 
         <div className="filter-group">
