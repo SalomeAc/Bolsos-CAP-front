@@ -1,22 +1,59 @@
 .product-detail-card-header {
   display: flex;
-  justify-content: space-between; /* Izquierda y Derecha */
-  align-items: center;            /* Centrados verticalmente entre ellos */
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   width: 100%;
-  gap: 16px;
+  position: relative;
+  z-index: 2;
 }
 
-/* Borramos por completo el comportamiento absoluto anterior */
-.product-detail-admin-toolbar {
-  display: none;
+.product-detail-card-header__speak {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
-/* El contenedor de los botones ahora se alinea a la derecha */
-.product-detail-admin-inline {
+.product-detail-card-header__speak .speak-error {
+  margin-top: 8px;
+}
+
+.product-detail-toolbar {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.product-detail-toolbar--admin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.product-detail-toolbar__speak {
+  min-width: 0;
+}
+
+.product-detail-toolbar__speak .speak-error {
+  margin-top: 8px;
+}
+
+.product-detail-toolbar__admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  justify-content: flex-end; /* Los empuja al lado contrario del eyebrow */
-  margin-bottom: -10px;      /* Truco visual para acercar el título y que no quede mucho espacio vacío */
+}
+
+.product-detail-toolbar__admin .button-admin-edit,
+.product-detail-toolbar__admin .button-admin-delete {
+  flex-shrink: 0;
 }
 
 /* Botones estéticos, más compactos y limpios */
@@ -100,6 +137,8 @@
 .product-detail-card h1,
 .empty-state h1 {
   margin: 0;
+  position: relative;
+  z-index: 1;
   font-family: var(--heading);
   color: #2c2438;
   font-size: clamp(2.4rem, 5vw, 4rem);
@@ -318,10 +357,28 @@
     radial-gradient(circle at top right, rgba(157, 127, 196, 0.16), transparent 36%),
     rgba(255, 255, 255, 0.82);
 }
-.product-detail-card > .speak-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+
+@media (max-width: 640px) {
+  .product-detail-card-header {
+    align-items: flex-start;
+  }
+
+  .product-detail-card-header__speak {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .product-detail-card-header__speak .speak-button--primary {
+    width: 100%;
+  }
+
+  .product-detail-toolbar--admin {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-toolbar__admin {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 1024px) {
