@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/useAuthStore";
+import { useAuthStore, isTokenExpired } from "../../store/useAuthStore";
 import {
   getNotifications,
   getUnreadNotificationCount,
@@ -25,6 +25,7 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const token = useAuthStore((state) => state.authToken);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
+  const logout = useAuthStore((state) => state.logout);
 
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -33,8 +34,30 @@ export function NotificationBell() {
   const [error, setError] = useState(null);
   const panelRef = useRef(null);
 
+  const handleAuthError = useCallback(
+    (message) => {
+      if (
+        message === "Invalid token" ||
+        message === "Token expired" ||
+        message === "Token missing"
+      ) {
+        logout();
+        setError("Tu sesión expiró. Inicia sesión nuevamente.");
+        navigate("/login");
+        return true;
+      }
+      return false;
+    },
+    [logout, navigate]
+  );
+
   const loadNotifications = useCallback(async () => {
     if (!token || !isAdmin) return;
+
+    if (isTokenExpired(token)) {
+      handleAuthError("Token expired");
+      return;
+    }
 
     try {
       setError(null);
@@ -46,12 +69,14 @@ export function NotificationBell() {
       setUnreadCount(countData.count ?? 0);
     } catch (err) {
       console.error("Error loading notifications:", err);
-      setError(err.message);
+      if (!handleAuthError(err.message)) {
+        setError(err.message);
+      }
     }
-  }, [token, isAdmin]);
+  }, [token, isAdmin, handleAuthError]);
 
   useEffect(() => {
-    if (!isAdmin || !token) return;
+    if (!isAdmin || !token || isTokenExpired(token)) return;
 
     loadNotifications();
     const interval = setInterval(loadNotifications, 15000);
@@ -102,7 +127,9 @@ export function NotificationBell() {
         navigate("/cotizaciones", { state: { selectedQuotationId: quotationId } });
       }
     } catch (err) {
-      setError(err.message);
+      if (!handleAuthError(err.message)) {
+        setError(err.message);
+      }
     }
   };
 
@@ -112,7 +139,9 @@ export function NotificationBell() {
       setUnreadCount(0);
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (err) {
-      setError(err.message);
+      if (!handleAuthError(err.message)) {
+        setError(err.message);
+      }
     }
   };
 

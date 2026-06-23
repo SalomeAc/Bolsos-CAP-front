@@ -1,7 +1,8 @@
 import "./Navigation.css";
 import { Link, NavLink } from "react-router-dom";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/useAuthStore.js";
+import { useAuthStore, isTokenExpired } from "../../store/useAuthStore.js";
 import { NotificationBell } from "../Notifications/NotificationBell.jsx";
 
 const getNavLinks = (isAdmin) => {
@@ -22,8 +23,17 @@ const getNavLinks = (isAdmin) => {
 export function Navigation() {
   const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.currentUser);
+  const authToken = useAuthStore((state) => state.authToken);
   const logout = useAuthStore((state) => state.logout);
-  const isAdmin = currentUser?.isAdmin === true;
+  const hasValidSession =
+    !!authToken && !isTokenExpired(authToken);
+  const isAdmin = currentUser?.isAdmin === true && hasValidSession;
+
+  useEffect(() => {
+    if (currentUser && authToken && isTokenExpired(authToken)) {
+      logout();
+    }
+  }, [currentUser, authToken, logout]);
 
   const handleLogout = () => {
     logout();
@@ -62,7 +72,7 @@ export function Navigation() {
           </Link>
         )}
 
-        {currentUser ? (
+        {currentUser && hasValidSession ? (
           <>
             {isAdmin && <NotificationBell />}
             <span style={{ marginRight: "1rem", fontSize: "0.9rem" }}>

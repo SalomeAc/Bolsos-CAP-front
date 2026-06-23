@@ -7,7 +7,6 @@ import {
   updateProduct as updateProductApi,
   deleteProduct as deleteProductApi,
 } from "../../services/productService.js";
-import { synthesizeSpeech, stopSpeaking } from "../../services/speechService.js";
 import { Link, useNavigate } from "react-router-dom";
 import "./ProductPage.css";
 import { SpeakButton } from "../../components/SpeakButton/SpeakButton.jsx";
@@ -149,7 +148,6 @@ export function ProductPage({ product }) {
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [isDeletingModalOpen, setIsDeletingModalOpen] = useState(false);
   const [isDeletingLoading, setIsDeletingLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(
     materialOptions[0] ?? "",
   );
@@ -252,26 +250,6 @@ export function ProductPage({ product }) {
     return parts.join(". ");
   };
 
-  // Manejar reproducción de audio
-  const handleSpeakDetails = async () => {
-    if (isSpeaking) {
-      stopSpeaking();
-      setIsSpeaking(false);
-      return;
-    }
-
-    try {
-      setIsSpeaking(true);
-      const description = generateProductDescription();
-      await synthesizeSpeech(description);
-      setIsSpeaking(false);
-    } catch (error) {
-      console.error("Error al reproducir audio:", error);
-      setIsSpeaking(false);
-      alert(`Error: ${error.message}`);
-    }
-  };
-
   return (
     <section className="product-detail-layout">
       <article
@@ -293,18 +271,21 @@ export function ProductPage({ product }) {
       </article>
 
       <article className="product-detail-card">
+        <span className="eyebrow">{product.type}</span>
 
-        {/* Botón escuchar — esquina superior derecha del card */}
-        <SpeakButton
-          text={generateProductDescription()}
-          variant="primary"
-          label="Escuchar detalles del producto"
-        />
-
-        <div className="product-detail-card-header">
-          <span className="eyebrow">{product.type}</span>
+        <div
+          className={`product-detail-toolbar${isAdmin ? " product-detail-toolbar--admin" : ""}`}
+          aria-label="Acciones del producto"
+        >
+          <div className="product-detail-toolbar__speak">
+            <SpeakButton
+              text={generateProductDescription()}
+              variant="primary"
+              label="Escuchar detalles del producto"
+            />
+          </div>
           {isAdmin && (
-            <div className="product-detail-admin-inline">
+            <div className="product-detail-toolbar__admin">
               <button
                 className="button-admin-edit"
                 type="button"
@@ -330,9 +311,7 @@ export function ProductPage({ product }) {
           )}
         </div>
 
-        <div className="product-detail-title-wrapper">
-          <h1>{product.name}</h1>
-        </div>
+        <h1>{product.name}</h1>
 
         <p className="product-code">
           Código: {(product.code || product._id || "producto").toUpperCase()}
