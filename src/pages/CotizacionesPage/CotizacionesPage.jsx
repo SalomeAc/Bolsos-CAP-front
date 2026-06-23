@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getAllQuotations } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Chat } from "../../components/Chat/Chat";
+import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
 import "../MisCotizacionesPage/MisCotizacionesPage.css";
 
 export function CotizacionesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const token = useAuthStore((state) => state.authToken);
   const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
 
   const [quotations, setQuotations] = useState([]);
-  const [selectedQuotationId, setSelectedQuotationId] = useState(null);
+  const [selectedQuotationId, setSelectedQuotationId] = useState(
+    location.state?.selectedQuotationId || null
+  );
+  const [showTraceability, setShowTraceability] = useState(false);
   const selectedQuotation = quotations.find(
     (q) => q._id === selectedQuotationId,
   );
@@ -52,6 +57,16 @@ export function CotizacionesPage() {
 
     return () => clearInterval(interval);
   }, [token, userIsAdmin]);
+
+  useEffect(() => {
+    if (location.state?.selectedQuotationId) {
+      setSelectedQuotationId(location.state.selectedQuotationId);
+    }
+  }, [location.state?.selectedQuotationId]);
+
+  useEffect(() => {
+    setShowTraceability(false);
+  }, [selectedQuotationId]);
 
   useEffect(() => {
     if (quotations.length === 0) return;
@@ -145,7 +160,10 @@ export function CotizacionesPage() {
                 </div>
 
                 <p className="quotation-item-product">
-                  {quotation.product?.name || "Catálogo"}
+                  {quotation.product?.name || quotation.customProduct?.description || "Personalizado"}
+                  {quotation.solicitud?.code && (
+                    <span className="solicitud-code"> · {quotation.solicitud.code}</span>
+                  )}
                 </p>
 
                 <p className="quotation-item-description">
@@ -171,13 +189,35 @@ export function CotizacionesPage() {
                   {selectedQuotation.user?.lastName}
                 </h2>
                 <p className="detail-email">{selectedQuotation.user?.email}</p>
+                {selectedQuotation.solicitud?.code && (
+                  <p className="detail-solicitud-code">
+                    Solicitud: {selectedQuotation.solicitud.code}
+                  </p>
+                )}
               </div>
-              <span
-                className={`status-badge status-${selectedQuotation.status}`}
-              >
-                {selectedQuotation.status}
-              </span>
+              <div className="detail-header-actions">
+                <button
+                  type="button"
+                  className="traceability-toggle"
+                  onClick={() => setShowTraceability((v) => !v)}
+                >
+                  {showTraceability ? "Ocultar trazabilidad" : "Ver trazabilidad"}
+                </button>
+                <span
+                  className={`status-badge status-${selectedQuotation.status}`}
+                >
+                  {selectedQuotation.status}
+                </span>
+              </div>
             </div>
+
+            {showTraceability && (
+              <TraceabilityPanel
+                quotationId={selectedQuotation._id}
+                token={token}
+                onClose={() => setShowTraceability(false)}
+              />
+            )}
 
             <div className="detail-chat-section">
               <Chat
