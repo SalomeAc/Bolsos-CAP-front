@@ -1,5 +1,59 @@
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 
+let activeSynthesizer = null;
+let activeSpeaker = null;
+let pendingSpeech = null;
+let speechStoppedByUser = false;
+let playbackTimeoutId = null;
+
+const clearPlaybackTimeout = () => {
+  if (playbackTimeoutId) {
+    clearTimeout(playbackTimeoutId);
+    playbackTimeoutId = null;
+  }
+};
+
+const finishPendingSpeech = (value) => {
+  if (!pendingSpeech) return;
+  const { resolve } = pendingSpeech;
+  pendingSpeech = null;
+  resolve(value);
+};
+
+const rejectPendingSpeech = (error) => {
+  if (!pendingSpeech) return;
+  const { reject } = pendingSpeech;
+  pendingSpeech = null;
+  reject(error);
+};
+
+const cleanupAzurePlayback = () => {
+  clearPlaybackTimeout();
+  if (activeSpeaker) {
+    try {
+      activeSpeaker.pause();
+      const audio = activeSpeaker.internalAudio;
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      activeSpeaker.close();
+    } catch {
+      // El destino de audio puede estar ya cerrado.
+    }
+    activeSpeaker = null;
+  }
+
+  if (activeSynthesizer) {
+    try {
+      activeSynthesizer.close();
+    } catch {
+      // El sintetizador puede estar ya cerrado.
+    }
+    activeSynthesizer = null;
+  }
+};
+
 /**
  * Reconocer voz (STT - Speech to Text)
  */
@@ -36,14 +90,19 @@ export const recognizeSpeech = () =>
  */
 export const synthesizeSpeech = (text) =>
   new Promise((resolve, reject) => {
+    stopSpeaking();
+
     if (!text || text.trim().length === 0) {
       reject(new Error("El texto a reproducir no puede estar vacío"));
       return;
     }
 
+    speechStoppedByUser = false;
+    pendingSpeech = { resolve, reject };
+
     if (!import.meta.env.VITE_AZURE_KEY || !import.meta.env.VITE_AZURE_REGION) {
       console.warn("Azure Speech SDK no configurado. Usando Web Speech API como alternativa.");
-      speakWithWebSpeechAPI(text, resolve, reject);
+      speakWithWebSpeechAPI(text);
       return;
     }
 
@@ -53,48 +112,96 @@ export const synthesizeSpeech = (text) =>
         import.meta.env.VITE_AZURE_REGION,
       );
 
-      // Usar altavoz del sistema
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
-
-      // Configurar idioma español
       speechConfig.speechSynthesisLanguage = "es-ES";
       speechConfig.speechSynthesisVoiceName = "es-ES-AlvaroNeural";
 
+      const speaker = new SpeechSDK.SpeakerAudioDestination();
+      activeSpeaker = speaker;
+
+      speaker.onAudioEnd = () => {
+        if (speechStoppedByUser) return;
+        cleanupAzurePlayback();
+        finishPendingSpeech(true);
+      };
+
+      const schedulePlaybackFallback = () => {
+        clearPlaybackTimeout();
+        const estimatedMs = Math.min(
+          120000,
+          Math.max(5000, text.length * 75),
+        );
+
+        playbackTimeoutId = setTimeout(() => {
+          if (!pendingSpeech || speechStoppedByUser) return;
+          cleanupAzurePlayback();
+          finishPendingSpeech(true);
+        }, estimatedMs);
+      };
+
+      const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(speaker);
       const synthesizer = new SpeechSDK.SpeechSynthesizer(
         speechConfig,
         audioConfig,
       );
 
-      synthesizer.speakTextAsync(text, (result) => {
-        if (
-          result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
-        ) {
-          console.log("✓ Audio sintetizado exitosamente");
-          resolve(true);
-        } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
-          const cancellation =
-            SpeechSDK.CancellationDetails.fromResult(result);
-          console.error(
-            "Cancelación de síntesis:",
-            cancellation.reason,
-            cancellation.errorDetails,
-          );
-          reject(new Error("Error en síntesis de voz"));
-        }
-      });
+      activeSynthesizer = synthesizer;
+
+      synthesizer.speakTextAsync(
+        text,
+        (result) => {
+          if (!pendingSpeech) return;
+
+          if (
+            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
+          ) {
+            console.log("✓ Audio sintetizado, reproduciendo...");
+            schedulePlaybackFallback();
+            return;
+          }
+
+          if (result.reason === SpeechSDK.ResultReason.Canceled) {
+            const cancellation =
+              SpeechSDK.CancellationDetails.fromResult(result);
+
+            cleanupAzurePlayback();
+
+            if (
+              cancellation.reason === SpeechSDK.CancellationReason.Error &&
+              cancellation.errorDetails
+            ) {
+              console.error(
+                "Cancelación de síntesis:",
+                cancellation.reason,
+                cancellation.errorDetails,
+              );
+              rejectPendingSpeech(new Error("Error en síntesis de voz"));
+              return;
+            }
+
+            if (!speechStoppedByUser) {
+              finishPendingSpeech(false);
+            }
+          }
+        },
+        (error) => {
+          cleanupAzurePlayback();
+          rejectPendingSpeech(new Error(error));
+        },
+      );
     } catch (error) {
       console.error("Error en TTS:", error);
-      // Fallback a Web Speech API
-      speakWithWebSpeechAPI(text, resolve, reject);
+      speakWithWebSpeechAPI(text);
     }
   });
 
 /**
  * Fallback usando Web Speech API (funciona en navegadores modernos)
  */
-const speakWithWebSpeechAPI = (text, resolve, reject) => {
+const speakWithWebSpeechAPI = (text) => {
   if (!("speechSynthesis" in window)) {
-    reject(new Error("Speech Synthesis no es soportado en este navegador"));
+    rejectPendingSpeech(
+      new Error("Speech Synthesis no es soportado en este navegador"),
+    );
     return;
   }
 
@@ -108,17 +215,17 @@ const speakWithWebSpeechAPI = (text, resolve, reject) => {
   utterance.volume = 1.0;
 
   utterance.onend = () => {
-    resolve(true);
+    finishPendingSpeech(true);
   };
 
   utterance.onerror = (event) => {
-    // "interrupted" = el usuario lo detuvo a propósito, no es un error real
     if (event.error === "interrupted" || event.error === "cancelled") {
-      resolve(false);
+      finishPendingSpeech(false);
       return;
     }
+
     console.error("Error en Web Speech API:", event.error);
-    reject(new Error(`Error de síntesis: ${event.error}`));
+    rejectPendingSpeech(new Error(`Error de síntesis: ${event.error}`));
   };
 
   window.speechSynthesis.speak(utterance);
@@ -128,6 +235,10 @@ const speakWithWebSpeechAPI = (text, resolve, reject) => {
  * Detener reproducción de audio
  */
 export const stopSpeaking = () => {
+  speechStoppedByUser = true;
+  finishPendingSpeech(false);
+  cleanupAzurePlayback();
+
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }

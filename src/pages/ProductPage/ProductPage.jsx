@@ -271,45 +271,58 @@ export function ProductPage({ product }) {
       </article>
 
       <article className="product-detail-card">
-        <span className="eyebrow">{product.type}</span>
+        {isAdmin ? (
+          <>
+            <span className="eyebrow">{product.type}</span>
 
-        <div
-          className={`product-detail-toolbar${isAdmin ? " product-detail-toolbar--admin" : ""}`}
-          aria-label="Acciones del producto"
-        >
-          <div className="product-detail-toolbar__speak">
-            <SpeakButton
-              text={generateProductDescription()}
-              variant="primary"
-              label="Escuchar detalles del producto"
-            />
-          </div>
-          {isAdmin && (
-            <div className="product-detail-toolbar__admin">
-              <button
-                className="button-admin-edit"
-                type="button"
-                onClick={() => setIsEditingModalOpen(true)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                </svg>
-                Editar
-              </button>
-              <button
-                className="button-admin-delete"
-                type="button"
-                onClick={() => setIsDeletingModalOpen(true)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-                Eliminar
-              </button>
+            <div
+              className="product-detail-toolbar product-detail-toolbar--admin"
+              aria-label="Acciones del producto"
+            >
+              <div className="product-detail-toolbar__speak">
+                <SpeakButton
+                  text={generateProductDescription()}
+                  variant="primary"
+                  label="Escuchar detalles del producto"
+                />
+              </div>
+              <div className="product-detail-toolbar__admin">
+                <button
+                  className="button-admin-edit"
+                  type="button"
+                  onClick={() => setIsEditingModalOpen(true)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                  Editar
+                </button>
+                <button
+                  className="button-admin-delete"
+                  type="button"
+                  onClick={() => setIsDeletingModalOpen(true)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                  Eliminar
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="product-detail-card-header">
+            <span className="eyebrow">{product.type}</span>
+            <div className="product-detail-card-header__speak">
+              <SpeakButton
+                text={generateProductDescription()}
+                variant="primary"
+                label="Escuchar detalles del producto"
+              />
+            </div>
+          </div>
+        )}
 
         <h1>{product.name}</h1>
 
