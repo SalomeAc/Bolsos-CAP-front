@@ -273,6 +273,48 @@
   cursor: not-allowed;
 }
 
+.mic-button--listening {
+  border-color: #b00020;
+  background: rgba(176, 0, 32, 0.08);
+  color: #b00020;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(176, 0, 32, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(176, 0, 32, 0);
+  }
+}
+
+.speech-status {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+  color: #6b5b7a;
+}
+
+.speech-status--active {
+  color: #574685;
+  font-weight: 500;
+}
+
+.speech-error {
+  margin-top: 8px;
+}
+
+.speech-error-dismiss {
+  border: none;
+  background: none;
+  color: #574685;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
 .cotizar-actions {
   display: flex;
   flex-wrap: wrap;
