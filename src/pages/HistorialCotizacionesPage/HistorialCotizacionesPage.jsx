@@ -9,11 +9,7 @@ import "./HistorialCotizacionesPage.css";
 
 const statusOptions = [
   { value: "pendiente", label: "Pendiente" },
-  { value: "cotizada_ia", label: "Cotizada (IA)" },
   { value: "en_revision", label: "En revisión" },
-  { value: "cotizada", label: "Cotizada" },
-  { value: "aceptada", label: "Aceptada" },
-  { value: "rechazada", label: "Rechazada" },
   { value: "en_produccion", label: "En producción" },
   { value: "completada", label: "Completada" },
   { value: "cancelada", label: "Cancelada" },
