@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createQuotation } from "../../services/quotationService.js";
+import { createCustomQuotationForm } from "../../services/quotationService.js";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import "./CotizarPage.css";
 
@@ -33,6 +33,8 @@ export function CotizarPage() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
   useEffect(() => {
     return () => {
@@ -55,6 +57,21 @@ export function CotizarPage() {
 
   const handlePhotoChange = (event) => {
     const file = event.target.files?.[0] ?? null;
+
+    if (file) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setSubmitError("Solo se permiten imágenes JPG, PNG, WEBP o GIF.");
+        event.target.value = "";
+        return;
+      }
+      if (file.size > MAX_SIZE_BYTES) {
+        setSubmitError("La imagen no puede superar 5 MB.");
+        event.target.value = "";
+        return;
+      }
+    }
+
+    setSubmitError("");
 
     if (photoPreview) {
       URL.revokeObjectURL(photoPreview);
@@ -115,20 +132,21 @@ export function CotizarPage() {
     setIsSubmitting(true);
 
     try {
-      const quotationData = {
-        kind: "custom",
-        customProduct: {
-          description: `Bolso personalizado en ${formState.material.trim()}`,
-          color: formState.color,
-          dimensions: formState.dimensions.trim(),
-          materials: [formState.material.trim()],
-          // photo: requiere endpoint de subida; por ahora no se envía URL
-        },
-        quantity: 1,
-        notes: formState.observaciones.trim() || undefined,
-      };
+      const formData = new FormData();
+      formData.append("dimensions", formState.dimensions.trim());
+      formData.append("color", formState.color);
+      formData.append("material", formState.material.trim());
 
-      const createdQuotation = await createQuotation(quotationData, token);
+      const observaciones = formState.observaciones.trim();
+      if (observaciones) {
+        formData.append("observaciones", observaciones);
+      }
+
+      if (photoFile) {
+        formData.append("photo", photoFile);
+      }
+
+      const createdQuotation = await createCustomQuotationForm(formData, token);
       const quotationId = createdQuotation?._id || createdQuotation?.id;
 
       navigate("/mis-cotizaciones", {
