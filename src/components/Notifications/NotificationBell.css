@@ -1,0 +1,139 @@
+.notification-bell {
+  position: relative;
+}
+
+.notification-bell__trigger {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  color: #574685;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.notification-bell__trigger:hover {
+  background: #f5f3fa;
+}
+
+.notification-bell__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.notification-bell__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, 90vw);
+  max-height: 420px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+}
+
+.notification-bell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-bell__header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2c2438;
+}
+
+.notification-bell__mark-all {
+  border: none;
+  background: none;
+  color: #574685;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.notification-bell__error {
+  margin: 0;
+  padding: 10px 14px;
+  color: #c0392b;
+  font-size: 0.82rem;
+}
+
+.notification-bell__empty {
+  margin: 0;
+  padding: 24px 14px;
+  text-align: center;
+  color: #888;
+  font-size: 0.88rem;
+}
+
+.notification-bell__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.notification-bell__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.notification-bell__item:hover {
+  background: #f9f8fc;
+}
+
+.notification-bell__item.unread {
+  background: #f3f0fa;
+}
+
+.notification-bell__item-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #2c2438;
+}
+
+.notification-bell__item-message {
+  font-size: 0.8rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.notification-bell__item-date {
+  font-size: 0.72rem;
+  color: #999;
+  margin-top: 2px;
+}

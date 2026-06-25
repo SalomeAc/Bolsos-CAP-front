@@ -6,6 +6,7 @@ import {
 } from "../../services/messageService";
 import { useAuthStore } from "../../store/useAuthStore";
 import "./Chat.css";
+import { SpeakButton } from "../SpeakButton/SpeakButton";
 
 export function Chat({ quotationId, quotation, isAdmin = false }) {
   const [messages, setMessages] = useState([]);
@@ -24,16 +25,23 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // Auto-scroll al final cuando hay nuevos mensajes
+  // Auto-scroll al final solo si el usuario está al final
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        messagesContainerRef.current;
+      // Solo scroll si está casi al final (menos de 100px del bottom)
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Cargar mensajes al montar el componente
+  // Cargar mensajes al montar el componente con polling para nuevos mensajes
   useEffect(() => {
     if (!quotationId || !token) return;
 
@@ -42,7 +50,16 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
         setLoading(true);
         setError(null);
         const data = await getLatestMessages(quotationId, token, 100);
-        setMessages(data);
+        setMessages((current) => {
+          const currentIds = current.map((m) => m._id).join(",");
+          const newIds = data.map((m) => m._id).join(",");
+
+          if (currentIds === newIds) {
+            return current;
+          }
+
+          return data;
+        });
       } catch (err) {
         console.error("Error loading messages:", err);
         setError(err.message);
@@ -129,8 +146,32 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
     return acc;
   }, {});
 
+  // Leer mensajes
+  const buildLastMessagesText = (limit = 5) => {
+    return messages
+      .slice(-limit)
+      .map((msg) => {
+        const sender = msg.isSystemMessage
+          ? "Sistema"
+          : msg.sender._id === userId
+            ? "Tú"
+            : msg.sender.firstName;
+
+        return `${sender}: ${msg.content}`;
+      })
+      .join(". ");
+  };
+
   return (
     <div className="chat-container">
+      <div className="chat-actions">
+        <SpeakButton
+          text={buildLastMessagesText(5)}
+          variant="inline"
+          label="Escuchar últimos mensajes"
+        />
+        <span className="chat-actions-label">Escuchar últimos mensajes</span>
+      </div>
       <div className="chat-messages" ref={messagesContainerRef}>
         {quotation && (
           <div className="product-message-item">
@@ -237,8 +278,15 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                 {msgs.map((msg) => (
                   <div
                     key={msg._id}
-                    className={`chat-message ${msg.sender._id === userId ? "sent" : "received"}`}
+                    className={`chat-message ${
+                      msg.isSystemMessage
+                        ? "system"
+                        : msg.sender._id === userId
+                          ? "sent"
+                          : "received"
+                    }`}
                   >
+                    {/* HEADER */}
                     <div className="chat-message-header">
                       <span className="chat-sender-name">
                         {msg.sender._id === userId
@@ -248,19 +296,13 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                       <span className="chat-message-time">
                         {formatTime(msg.createdAt)}
                       </span>
-                      {msg.sender._id === userId && (
-                        <button
-                          className="chat-delete-btn"
-                          onClick={() => handleDeleteMessage(msg._id)}
-                          title="Eliminar mensaje"
-                          aria-label="Eliminar mensaje"
-                        >
-                          ✕
-                        </button>
-                      )}
                     </div>
+
+                    {/* CONTENIDO (AQUÍ VAN LOS \n) */}
                     <div className="chat-message-content">{msg.content}</div>
-                    {msg.attachments && msg.attachments.length > 0 && (
+
+                    {/* ATTACHMENTS */}
+                    {msg.attachments?.length > 0 && (
                       <div className="chat-message-attachments">
                         {msg.attachments.map((attachment, idx) => (
                           <a
@@ -274,6 +316,16 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                           </a>
                         ))}
                       </div>
+                    )}
+
+                    {/* DELETE BUTTON */}
+                    {msg.sender._id === userId && (
+                      <button
+                        className="chat-delete-btn"
+                        onClick={() => handleDeleteMessage(msg._id)}
+                      >
+                        ✕
+                      </button>
                     )}
                   </div>
                 ))}

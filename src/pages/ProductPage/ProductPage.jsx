@@ -9,6 +9,7 @@ import {
 } from "../../services/productService.js";
 import { Link, useNavigate } from "react-router-dom";
 import "./ProductPage.css";
+import { SpeakButton } from "../../components/SpeakButton/SpeakButton.jsx";
 
 const splitList = (value) => {
   if (!value) return [];
@@ -231,6 +232,24 @@ export function ProductPage({ product }) {
     return url;
   };
 
+  // Generar descripción de voz para el producto
+  const generateProductDescription = () => {
+    const parts = [
+      `Producto: ${product.name}`,
+      `Tipo: ${product.type}`,
+      `Descripción: ${product.description}`,
+      `Material: ${selectedMaterial}`,
+      `Dimensiones: ${selectedDimension}`,
+      `Color: ${selectedColor}`,
+    ];
+
+    if (product.price) {
+      parts.push(`Precio: ${product.price}`);
+    }
+
+    return parts.join(". ");
+  };
+
   return (
     <section className="product-detail-layout">
       <article
@@ -252,49 +271,61 @@ export function ProductPage({ product }) {
       </article>
 
       <article className="product-detail-card">
-        <div className="product-detail-card-header">
-          <span className="eyebrow">{product.type}</span>
-          {isAdmin && (
-            <div className="product-detail-admin-inline">
-              <button
-                className="button-admin-edit"
-                type="button"
-                onClick={() => setIsEditingModalOpen(true)}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+        {isAdmin ? (
+          <>
+            <span className="eyebrow">{product.type}</span>
+
+            <div
+              className="product-detail-toolbar product-detail-toolbar--admin"
+              aria-label="Acciones del producto"
+            >
+              <div className="product-detail-toolbar__speak">
+                <SpeakButton
+                  text={generateProductDescription()}
+                  variant="primary"
+                  label="Escuchar detalles del producto"
+                />
+              </div>
+              <div className="product-detail-toolbar__admin">
+                <button
+                  className="button-admin-edit"
+                  type="button"
+                  onClick={() => setIsEditingModalOpen(true)}
                 >
-                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                </svg>
-                Editar
-              </button>
-              <button
-                className="button-admin-delete"
-                type="button"
-                onClick={() => setIsDeletingModalOpen(true)}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                  Editar
+                </button>
+                <button
+                  className="button-admin-delete"
+                  type="button"
+                  onClick={() => setIsDeletingModalOpen(true)}
                 >
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-                Eliminar
-              </button>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                  Eliminar
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="product-detail-card-header">
+            <span className="eyebrow">{product.type}</span>
+            <div className="product-detail-card-header__speak">
+              <SpeakButton
+                text={generateProductDescription()}
+                variant="primary"
+                label="Escuchar detalles del producto"
+              />
+            </div>
+          </div>
+        )}
+
         <h1>{product.name}</h1>
+
         <p className="product-code">
           Código: {(product.code || product._id || "producto").toUpperCase()}
         </p>
@@ -320,10 +351,7 @@ export function ProductPage({ product }) {
           </div>
 
           <div className="product-dropdown">
-            <label
-              className="product-dropdown-label"
-              htmlFor="dimension-select"
-            >
+            <label className="product-dropdown-label" htmlFor="dimension-select">
               Dimensiones
             </label>
             <select
@@ -336,7 +364,6 @@ export function ProductPage({ product }) {
                 const dimensionValue = Array.isArray(dimension)
                   ? dimension.join(" x ")
                   : String(dimension);
-
                 return (
                   <option key={dimensionValue} value={dimensionValue}>
                     {formatDimensionLabel(dimensionValue)}
@@ -358,15 +385,12 @@ export function ProductPage({ product }) {
                   {colorOptions.map((color) => {
                     const colorLabel = getColorText(color);
                     const isSelected = selectedColor === colorLabel;
-
                     return (
                       <button
                         key={colorLabel}
                         type="button"
                         className={`color-swatch color-swatch--labeled${isSelected ? " is-selected" : ""}`}
-                        onClick={() => {
-                          setSelectedColor(colorLabel);
-                        }}
+                        onClick={() => setSelectedColor(colorLabel)}
                         aria-label={`Seleccionar color ${colorLabel}`}
                         aria-pressed={isSelected}
                         title={colorLabel}
@@ -402,7 +426,6 @@ export function ProductPage({ product }) {
                 navigate(-1);
                 return;
               }
-
               navigate("/catalog");
             }}
           >
@@ -435,9 +458,7 @@ export function ProductPage({ product }) {
                 }
 
                 navigate("/quotation-summary", {
-                  state: {
-                    summary: payload,
-                  },
+                  state: { summary: payload },
                 });
               }}
             >

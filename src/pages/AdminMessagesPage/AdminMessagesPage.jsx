@@ -12,10 +12,27 @@ export function AdminMessagesPage() {
   const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
 
   const [quotations, setQuotations] = useState([]);
-  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [selectedQuotationId, setSelectedQuotationId] = useState(() => {
+    // Cargar el ID guardado en localStorage
+    return localStorage.getItem("selectedQuotationId");
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Guardar el ID seleccionado en localStorage cuando cambia
+  useEffect(() => {
+    if (selectedQuotationId) {
+      localStorage.setItem("selectedQuotationId", selectedQuotationId);
+    } else {
+      localStorage.removeItem("selectedQuotationId");
+    }
+  }, [selectedQuotationId]);
+
+  // Obtener el objeto de la cotización seleccionada desde la lista
+  const selectedQuotation = selectedQuotationId
+    ? quotations.find((q) => q._id === selectedQuotationId)
+    : null;
 
   // Verificar que el usuario es administrador
   useEffect(() => {
@@ -24,7 +41,7 @@ export function AdminMessagesPage() {
     }
   }, [userIsAdmin, navigate]);
 
-  // Cargar todas las cotizaciones
+  // Cargar todas las cotizaciones con polling para nuevos mensajes
   useEffect(() => {
     if (!token || !userIsAdmin) return;
 
@@ -34,11 +51,6 @@ export function AdminMessagesPage() {
         setError(null);
         const data = await getAllQuotations(token);
         setQuotations(data);
-
-        // Seleccionar la primera cotización por defecto
-        if (data.length > 0 && !selectedQuotation) {
-          setSelectedQuotation(data[0]);
-        }
       } catch (err) {
         console.error("Error loading quotations:", err);
         setError(err.message);
@@ -49,31 +61,10 @@ export function AdminMessagesPage() {
 
     loadQuotations();
 
-    // Poll cada 10 segundos
-    const interval = setInterval(loadQuotations, 10000);
+    // Poll cada 5 segundos para nuevos mensajes/cotizaciones
+    const interval = setInterval(loadQuotations, 5000);
     return () => clearInterval(interval);
   }, [token, userIsAdmin]);
-
-  // Actualizar cotización seleccionada cuando cambia la lista
-  useEffect(() => {
-    if (selectedQuotation) {
-      const updated = quotations.find((q) => q._id === selectedQuotation._id);
-      if (updated) {
-        setSelectedQuotation(updated);
-      }
-    }
-  }, [quotations]);
-
-  // Si viene selectedQuotationId desde navegación
-  useEffect(() => {
-    const selectedId = location.state?.selectedQuotationId;
-    if (selectedId && quotations.length > 0) {
-      const quotation = quotations.find((q) => q._id === selectedId);
-      if (quotation) {
-        setSelectedQuotation(quotation);
-      }
-    }
-  }, [location.state?.selectedQuotationId, quotations]);
 
   // Filtrar cotizaciones por búsqueda
   const filteredQuotations = quotations.filter((q) => {
@@ -128,8 +119,8 @@ export function AdminMessagesPage() {
           {sortedQuotations.map((quotation) => (
             <div
               key={quotation._id}
-              className={`quotation-item ${selectedQuotation?._id === quotation._id ? "active" : ""}`}
-              onClick={() => setSelectedQuotation(quotation)}
+              className={`quotation-item ${selectedQuotationId === quotation._id ? "active" : ""}`}
+              onClick={() => setSelectedQuotationId(quotation._id)}
             >
               <div
                 className="quotation-item-avatar"

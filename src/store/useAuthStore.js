@@ -54,6 +54,12 @@ function buildGoogleProfile(credentialPayload, sessionToken) {
   }
 }
 
+export const isTokenExpired = (token) => {
+  const payload = decodeJwtPayload(token)
+  if (!payload?.exp) return true;
+  return Date.now() >= payload.exp * 1000;
+};
+
 export const useAuthStore = create(
   persist(
     (set) => ({
