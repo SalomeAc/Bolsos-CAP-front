@@ -37,10 +37,7 @@ export function QuotationDetailPage() {
     }
 
     loadQuotation()
-
-    // Poll para actualizar cada 5 segundos
-    const interval = setInterval(loadQuotation, 5000)
-    return () => clearInterval(interval)
+    // Solo cargar una vez al montar, sin poll constante
   }, [quotationId, token])
 
   // Responder a la cotización

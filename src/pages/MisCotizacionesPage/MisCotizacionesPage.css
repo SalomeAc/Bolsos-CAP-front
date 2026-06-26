@@ -435,6 +435,39 @@
   background: #999;
 }
 
+.detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-solicitud-code {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #574685;
+  font-weight: 600;
+}
+
+.traceability-toggle {
+  border: 1px solid #d8d0e8;
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: #fff;
+  color: #574685;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.traceability-toggle:hover {
+  background: #f5f3fa;
+}
+
+.solicitud-code {
+  color: #888;
+  font-size: 0.82em;
+}
+
 
 
 

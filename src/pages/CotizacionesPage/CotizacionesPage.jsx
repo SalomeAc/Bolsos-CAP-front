@@ -1,17 +1,25 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getAllQuotations } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Chat } from "../../components/Chat/Chat";
+import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
 import "../MisCotizacionesPage/MisCotizacionesPage.css";
 
 export function CotizacionesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const token = useAuthStore((state) => state.authToken);
   const userIsAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
 
   const [quotations, setQuotations] = useState([]);
-  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [selectedQuotationId, setSelectedQuotationId] = useState(
+    location.state?.selectedQuotationId || null
+  );
+  const [showTraceability, setShowTraceability] = useState(false);
+  const selectedQuotation = quotations.find(
+    (q) => q._id === selectedQuotationId,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,13 +39,10 @@ export function CotizacionesPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getAllQuotations(token);
-        setQuotations(data);
 
-        // Seleccionar la primera cotización por defecto
-        if (data.length > 0 && !selectedQuotation) {
-          setSelectedQuotation(data[0]);
-        }
+        const data = await getAllQuotations(token);
+
+        setQuotations(data);
       } catch (err) {
         console.error("Error loading quotations:", err);
         setError(err.message);
@@ -48,19 +53,35 @@ export function CotizacionesPage() {
 
     loadQuotations();
 
-    // Poll cada 10 segundos
     const interval = setInterval(loadQuotations, 10000);
+
     return () => clearInterval(interval);
   }, [token, userIsAdmin]);
 
-  // Actualizar cotización seleccionada cuando cambia la lista
   useEffect(() => {
-    if (selectedQuotation) {
-      const updated = quotations.find((q) => q._id === selectedQuotation._id);
-      if (updated) {
-        setSelectedQuotation(updated);
-      }
+    if (location.state?.selectedQuotationId) {
+      setSelectedQuotationId(location.state.selectedQuotationId);
     }
+  }, [location.state?.selectedQuotationId]);
+
+  useEffect(() => {
+    setShowTraceability(false);
+  }, [selectedQuotationId]);
+
+  useEffect(() => {
+    if (quotations.length === 0) return;
+
+    setSelectedQuotationId((currentId) => {
+      if (currentId) {
+        const exists = quotations.some((q) => q._id === currentId);
+
+        if (exists) {
+          return currentId;
+        }
+      }
+
+      return quotations[0]._id;
+    });
   }, [quotations]);
 
   // Filtrar cotizaciones por búsqueda
@@ -121,8 +142,8 @@ export function CotizacionesPage() {
           {sortedQuotations.map((quotation) => (
             <div
               key={quotation._id}
-              className={`quotation-item ${selectedQuotation?._id === quotation._id ? "active" : ""}`}
-              onClick={() => setSelectedQuotation(quotation)}
+              className={`quotation-item ${selectedQuotationId === quotation._id ? "active" : ""}`}
+              onClick={() => setSelectedQuotationId(quotation._id)}
             >
               <div className="quotation-item-avatar">
                 {quotation.user?.firstName?.[0]?.toUpperCase() || "C"}
@@ -139,7 +160,10 @@ export function CotizacionesPage() {
                 </div>
 
                 <p className="quotation-item-product">
-                  {quotation.product?.name || "Catálogo"}
+                  {quotation.product?.name || quotation.customProduct?.description || "Personalizado"}
+                  {quotation.solicitud?.code && (
+                    <span className="solicitud-code"> · {quotation.solicitud.code}</span>
+                  )}
                 </p>
 
                 <p className="quotation-item-description">
@@ -165,13 +189,35 @@ export function CotizacionesPage() {
                   {selectedQuotation.user?.lastName}
                 </h2>
                 <p className="detail-email">{selectedQuotation.user?.email}</p>
+                {selectedQuotation.solicitud?.code && (
+                  <p className="detail-solicitud-code">
+                    Solicitud: {selectedQuotation.solicitud.code}
+                  </p>
+                )}
               </div>
-              <span
-                className={`status-badge status-${selectedQuotation.status}`}
-              >
-                {selectedQuotation.status}
-              </span>
+              <div className="detail-header-actions">
+                <button
+                  type="button"
+                  className="traceability-toggle"
+                  onClick={() => setShowTraceability((v) => !v)}
+                >
+                  {showTraceability ? "Ocultar trazabilidad" : "Ver trazabilidad"}
+                </button>
+                <span
+                  className={`status-badge status-${selectedQuotation.status}`}
+                >
+                  {selectedQuotation.status}
+                </span>
+              </div>
             </div>
+
+            {showTraceability && (
+              <TraceabilityPanel
+                quotationId={selectedQuotation._id}
+                token={token}
+                onClose={() => setShowTraceability(false)}
+              />
+            )}
 
             <div className="detail-chat-section">
               <Chat
