@@ -433,18 +433,17 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  position: fixed;
+  position: sticky;
   right: 24px;      /* <- alineado a la derecha */
   bottom: 70%;
-
+  top: 0;
   margin-top: 8px;
   margin-right: 8px;
   padding: 8px 12px;
-
   background: rgba(126, 92, 128, 0.09);
   border: 1px solid rgba(126, 92, 128, 0.08);
   border-radius: 12px;
-
+  z-index: 10;
   width: fit-content;
   margin-left: auto;
   font-size: 15px;
