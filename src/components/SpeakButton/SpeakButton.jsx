@@ -80,8 +80,8 @@ export function SpeakButton({ text, variant = "inline", label = "Escuchar" }) {
 
         {variant === "inline" && (
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="currentColor"
             aria-hidden="true"
@@ -89,7 +89,7 @@ export function SpeakButton({ text, variant = "inline", label = "Escuchar" }) {
             {isSpeaking ? (
               <path d="M6 4v16h4V4H6zm8 0v16h4V4h-4z" />
             ) : (
-              <path d="M8 5v14l11-7z" />
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
             )}
           </svg>
         )}
