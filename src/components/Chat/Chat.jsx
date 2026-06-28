@@ -278,7 +278,7 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                       <SpeakButton
                         text={buildMessageText(msg)}
                         variant="inline"
-                        label="Escuchar últimos mensajes"
+                        label="Escuchar mensaje"
                       />
                       <span className="chat-sender-name">
                         {msg.sender._id === userId
