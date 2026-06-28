@@ -146,32 +146,19 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
     return acc;
   }, {});
 
-  // Leer mensajes
-  const buildLastMessagesText = (limit = 5) => {
-    return messages
-      .slice(-limit)
-      .map((msg) => {
-        const sender = msg.isSystemMessage
-          ? "Sistema"
-          : msg.sender._id === userId
-            ? "Tú"
-            : msg.sender.firstName;
+  // Leer mensaje
+  const buildMessageText = (msg) => {
+    const sender = msg.isSystemMessage
+      ? "Sistema"
+      : msg.sender._id === userId
+        ? "Tú"
+        : msg.sender.firstName;
 
-        return `${sender}: ${msg.content}`;
-      })
-      .join(". ");
+    return `${sender}: ${msg.content}`;
   };
 
   return (
     <div className="chat-container">
-      <div className="chat-actions">
-        <SpeakButton
-          text={buildLastMessagesText(5)}
-          variant="inline"
-          label="Escuchar últimos mensajes"
-        />
-        <span className="chat-actions-label">Escuchar últimos mensajes</span>
-      </div>
       <div className="chat-messages" ref={messagesContainerRef}>
         {quotation && (
           <div className="product-message-item">
@@ -288,6 +275,11 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                   >
                     {/* HEADER */}
                     <div className="chat-message-header">
+                      <SpeakButton
+                        text={buildMessageText(msg)}
+                        variant="inline"
+                        label="Escuchar últimos mensajes"
+                      />
                       <span className="chat-sender-name">
                         {msg.sender._id === userId
                           ? "Tú"
