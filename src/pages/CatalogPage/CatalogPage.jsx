@@ -26,7 +26,10 @@ export function CatalogPage() {
   const handleVoiceSearch = async () => {
     try {
       const text = await recognizeSpeech();
-      setSearchTerm(text);
+
+      const cleanText = text.trim().replace(/^[.,!?;:]+|[.,!?;:]+$/g, "");
+
+      setSearchTerm(cleanText);
     } catch (error) {
       console.error(error);
     }
