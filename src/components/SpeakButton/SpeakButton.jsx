@@ -28,15 +28,14 @@ export function SpeakButton({ text, variant = "inline", label = "Escuchar" }) {
       setError(null);
       setIsSpeaking(true);
       await synthesizeSpeech(text);
-      setIsSpeaking(false);
     } catch (err) {
       const msg = err?.message?.toLowerCase() ?? "";
       if (msg.includes("interrupted") || msg.includes("cancelled") || msg.includes("cancel")) {
-        setIsSpeaking(false);
         return;
       }
       console.error("Error en TTS:", err);
       setError(err.message);
+    } finally {
       setIsSpeaking(false);
     }
   };
