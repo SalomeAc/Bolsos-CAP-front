@@ -194,7 +194,8 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                 {quotation.kind === "catalog" &&
                   (quotation.customization?.color ||
                     quotation.customization?.size ||
-                    quotation.customization?.type) && (
+                    quotation.customization?.type ||
+                    quotation.customization?.material) && (
                     <p className="product-card-specs">
                       {quotation.customization?.color &&
                         `Color: ${quotation.customization.color}`}
@@ -208,7 +209,14 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
                         quotation.customization?.type &&
                         " • "}
                       {quotation.customization?.type &&
-                        `Material: ${quotation.customization.type}`}
+                        `Tipo: ${quotation.customization.type}`}
+                      {(quotation.customization?.color ||
+                        quotation.customization?.size ||
+                        quotation.customization?.type) &&
+                        quotation.customization?.material &&
+                        " • "}
+                      {quotation.customization?.material &&
+                        `Material: ${quotation.customization.material}`}
                     </p>
                   )}
 
