@@ -4,13 +4,27 @@ let activeSynthesizer = null;
 let activeSpeaker = null;
 let pendingSpeech = null;
 let speechStoppedByUser = false;
+let speechSessionId = 0;
+let playbackPollId = null;
 let playbackTimeoutId = null;
 
-const clearPlaybackTimeout = () => {
+const clearPlaybackWatchers = () => {
+  if (playbackPollId) {
+    clearInterval(playbackPollId);
+    playbackPollId = null;
+  }
   if (playbackTimeoutId) {
     clearTimeout(playbackTimeoutId);
     playbackTimeoutId = null;
   }
+};
+
+/** Azure devuelve duración en ticks de 100 ns; convertir a ms con margen. */
+const estimatePlaybackMs = (audioDurationTicks, text) => {
+  if (audioDurationTicks && audioDurationTicks > 0) {
+    return Math.ceil(audioDurationTicks / 10000) + 500;
+  }
+  return Math.min(300000, Math.max(8000, text.length * 100));
 };
 
 const finishPendingSpeech = (value) => {
@@ -28,7 +42,7 @@ const rejectPendingSpeech = (error) => {
 };
 
 const cleanupAzurePlayback = () => {
-  clearPlaybackTimeout();
+  clearPlaybackWatchers();
   if (activeSpeaker) {
     try {
       activeSpeaker.pause();
@@ -90,14 +104,23 @@ export const recognizeSpeech = () =>
  */
 export const synthesizeSpeech = (text) =>
   new Promise((resolve, reject) => {
-    stopSpeaking();
+    if (pendingSpeech) {
+      finishPendingSpeech(false);
+    }
+
+    speechStoppedByUser = false;
+    cleanupAzurePlayback();
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
 
     if (!text || text.trim().length === 0) {
       reject(new Error("El texto a reproducir no puede estar vacío"));
       return;
     }
 
-    speechStoppedByUser = false;
+    const sessionId = ++speechSessionId;
     pendingSpeech = { resolve, reject };
 
     if (!import.meta.env.VITE_AZURE_KEY || !import.meta.env.VITE_AZURE_REGION) {
@@ -118,24 +141,72 @@ export const synthesizeSpeech = (text) =>
       const speaker = new SpeechSDK.SpeakerAudioDestination();
       activeSpeaker = speaker;
 
-      speaker.onAudioEnd = () => {
-        if (speechStoppedByUser) return;
+      let playbackDurationMs = estimatePlaybackMs(0, text);
+      let playbackStarted = false;
+
+      const completeAzureSpeech = () => {
+        if (sessionId !== speechSessionId) return;
+        if (speechStoppedByUser || !pendingSpeech) return;
+        clearPlaybackWatchers();
         cleanupAzurePlayback();
         finishPendingSpeech(true);
       };
 
-      const schedulePlaybackFallback = () => {
-        clearPlaybackTimeout();
-        const estimatedMs = Math.min(
-          120000,
-          Math.max(5000, text.length * 75),
-        );
-
+      const schedulePlaybackComplete = () => {
+        if (playbackTimeoutId) {
+          clearTimeout(playbackTimeoutId);
+          playbackTimeoutId = null;
+        }
         playbackTimeoutId = setTimeout(() => {
-          if (!pendingSpeech || speechStoppedByUser) return;
-          cleanupAzurePlayback();
-          finishPendingSpeech(true);
-        }, estimatedMs);
+          playbackTimeoutId = null;
+          completeAzureSpeech();
+        }, playbackDurationMs);
+      };
+
+      const watchPlaybackEnd = () => {
+        const audio = speaker.internalAudio;
+        if (!audio) return;
+
+        if (audio.ended) {
+          completeAzureSpeech();
+          return;
+        }
+
+        playbackPollId = setInterval(() => {
+          if (sessionId !== speechSessionId) {
+            clearPlaybackWatchers();
+            return;
+          }
+          if (speechStoppedByUser || !pendingSpeech) {
+            clearPlaybackWatchers();
+            return;
+          }
+          if (audio.ended) {
+            completeAzureSpeech();
+          }
+        }, 250);
+      };
+
+      const onPlaybackStarted = () => {
+        if (playbackStarted) {
+          schedulePlaybackComplete();
+          return;
+        }
+        playbackStarted = true;
+        watchPlaybackEnd();
+        const audio = speaker.internalAudio;
+        if (audio) {
+          audio.addEventListener("ended", completeAzureSpeech, { once: true });
+        }
+        schedulePlaybackComplete();
+      };
+
+      speaker.onAudioEnd = () => {
+        completeAzureSpeech();
+      };
+
+      speaker.onAudioStart = () => {
+        onPlaybackStarted();
       };
 
       const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(speaker);
@@ -154,8 +225,15 @@ export const synthesizeSpeech = (text) =>
           if (
             result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
           ) {
-            console.log("✓ Audio sintetizado, reproduciendo...");
-            schedulePlaybackFallback();
+            playbackDurationMs = estimatePlaybackMs(result.audioDuration, text);
+            console.log(
+              `✓ Audio sintetizado, reproduciendo (~${Math.round(playbackDurationMs / 1000)}s)...`,
+            );
+            if (speaker.internalAudio) {
+              onPlaybackStarted();
+            } else {
+              schedulePlaybackComplete();
+            }
             return;
           }
 
@@ -235,6 +313,7 @@ const speakWithWebSpeechAPI = (text) => {
  * Detener reproducción de audio
  */
 export const stopSpeaking = () => {
+  speechSessionId += 1;
   speechStoppedByUser = true;
   finishPendingSpeech(false);
   cleanupAzurePlayback();
