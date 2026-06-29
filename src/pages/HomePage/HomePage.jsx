@@ -31,11 +31,11 @@ export function HomePage({ products }) {
                 <Link className="button button-secondary" to="/profile">
                   Mi perfil
                 </Link>
-                {isAdmin && (
+                {/* {isAdmin && (
                   <Link className="button button-secondary" to="/admin">
                     Dashboard Admin
                   </Link>
-                )}
+                )} */}
               </>
             ) : (
               <>
