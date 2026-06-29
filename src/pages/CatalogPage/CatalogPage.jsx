@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ProductCard } from "../../components/ProductCard/ProductCard.jsx";
 import { CreateProductModal } from "../../components/ProductAdmin/CreateProductModal.jsx";
+import VoiceButton from "../../components/VoiceButton/VoiceButton";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { useProductsStore } from "../../store/useProductsStore.js";
 import {
@@ -8,7 +9,6 @@ import {
   fetchProducts,
 } from "../../services/productService.js";
 import "./CatalogPage.css";
-import { recognizeSpeech } from "../../services/speechService";
 
 export function CatalogPage() {
   const products = useProductsStore((state) => state.products);
@@ -18,21 +18,17 @@ export function CatalogPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const setProducts = useProductsStore((state) => state.setProducts);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isListening, setIsListening] = useState(false);
   const filteredProducts = products.filter((product) =>
     `${product.name ?? ""} ${product.description ?? ""}`
       .toLowerCase()
       .includes((searchTerm ?? "").toLowerCase()),
   );
-  const handleVoiceSearch = async () => {
-    try {
-      const text = await recognizeSpeech();
 
-      const cleanText = text.trim().replace(/^[.,!?;:]+|[.,!?;:]+$/g, "");
+  const handleVoiceResult = (text) => {
+    const cleanText = text.trim().replace(/^[.,!?;:]+|[.,!?;:]+$/g, "");
 
-      setSearchTerm(cleanText);
-    } catch (error) {
-      console.error(error);
-    }
+    setSearchTerm(cleanText);
   };
 
   useEffect(() => {
@@ -92,13 +88,14 @@ export function CatalogPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button
-            className="voice-search-button"
-            type="button"
-            onClick={handleVoiceSearch}
-          >
-            <span className="iconamoon--microphone-bold"></span>
-          </button>
+          {isListening ? (
+            <span className="catalog-voice-status">Escuchando...</span>
+          ) : null}
+          <VoiceButton
+            onResult={handleVoiceResult}
+            onStart={() => setIsListening(true)}
+            onEnd={() => setIsListening(false)}
+          />
         </div>
         <div className="product-grid">
           {filteredProducts.map((product) => (

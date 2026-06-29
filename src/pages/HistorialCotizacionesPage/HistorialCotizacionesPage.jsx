@@ -267,6 +267,7 @@ export function HistorialCotizacionesPage() {
           <VoiceButton
             onResult={handleVoiceResult}
             onStart={() => setIsListening(true)}
+            onEnd={() => setIsListening(false)}
           />
           <div className="voice-search-display">
             {isListening ? (
