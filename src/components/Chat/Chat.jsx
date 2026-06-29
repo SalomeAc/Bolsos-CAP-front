@@ -6,6 +6,7 @@ import {
 } from "../../services/messageService";
 import { useAuthStore } from "../../store/useAuthStore";
 import "./Chat.css";
+import { SpeakButton } from "../SpeakButton/SpeakButton";
 
 export function Chat({ quotationId, quotation, isAdmin = false }) {
   const [messages, setMessages] = useState([]);
@@ -27,7 +28,8 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
   // Auto-scroll al final solo si el usuario está al final
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } =
+        messagesContainerRef.current;
       // Solo scroll si está casi al final (menos de 100px del bottom)
       if (scrollHeight - scrollTop - clientHeight < 100) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -144,6 +146,17 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
     return acc;
   }, {});
 
+  // Leer mensaje
+  const buildMessageText = (msg) => {
+    const sender = msg.isSystemMessage
+      ? "Sistema"
+      : msg.sender._id === userId
+        ? "Tú"
+        : msg.sender.firstName;
+
+    return `${sender}: ${msg.content}`;
+  };
+
   return (
     <div className="chat-container">
       <div className="chat-messages" ref={messagesContainerRef}>
@@ -250,59 +263,64 @@ export function Chat({ quotationId, quotation, isAdmin = false }) {
               <div key={date}>
                 <div className="chat-date-separator">{date}</div>
                 {msgs.map((msg) => (
-  <div
-    key={msg._id}
-    className={`chat-message ${
-      msg.isSystemMessage
-        ? "system"
-        : msg.sender._id === userId
-          ? "sent"
-          : "received"
-    }`}
-  >
-    {/* HEADER */}
-    <div className="chat-message-header">
-      <span className="chat-sender-name">
-        {msg.sender._id === userId ? "Tú" : msg.sender.firstName}
-      </span>
-      <span className="chat-message-time">
-        {formatTime(msg.createdAt)}
-      </span>
-    </div>
+                  <div
+                    key={msg._id}
+                    className={`chat-message ${
+                      msg.isSystemMessage
+                        ? "system"
+                        : msg.sender._id === userId
+                          ? "sent"
+                          : "received"
+                    }`}
+                  >
+                    {/* HEADER */}
+                    <div className="chat-message-header">
+                      <SpeakButton
+                        text={buildMessageText(msg)}
+                        variant="inline"
+                        label="Escuchar mensaje"
+                      />
+                      <span className="chat-sender-name">
+                        {msg.sender._id === userId
+                          ? "Tú"
+                          : msg.sender.firstName}
+                      </span>
+                      <span className="chat-message-time">
+                        {formatTime(msg.createdAt)}
+                      </span>
+                    </div>
 
-    {/* CONTENIDO (AQUÍ VAN LOS \n) */}
-    <div className="chat-message-content">
-      {msg.content}
-    </div>
+                    {/* CONTENIDO (AQUÍ VAN LOS \n) */}
+                    <div className="chat-message-content">{msg.content}</div>
 
-    {/* ATTACHMENTS */}
-    {msg.attachments?.length > 0 && (
-      <div className="chat-message-attachments">
-        {msg.attachments.map((attachment, idx) => (
-          <a
-            key={idx}
-            href={attachment}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="chat-attachment"
-          >
-            📎 Ver adjunto
-          </a>
-        ))}
-      </div>
-    )}
+                    {/* ATTACHMENTS */}
+                    {msg.attachments?.length > 0 && (
+                      <div className="chat-message-attachments">
+                        {msg.attachments.map((attachment, idx) => (
+                          <a
+                            key={idx}
+                            href={attachment}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="chat-attachment"
+                          >
+                            📎 Ver adjunto
+                          </a>
+                        ))}
+                      </div>
+                    )}
 
-    {/* DELETE BUTTON */}
-    {msg.sender._id === userId && (
-      <button
-        className="chat-delete-btn"
-        onClick={() => handleDeleteMessage(msg._id)}
-      >
-        ✕
-      </button>
-    )}
-  </div>
-))}
+                    {/* DELETE BUTTON */}
+                    {msg.sender._id === userId && (
+                      <button
+                        className="chat-delete-btn"
+                        onClick={() => handleDeleteMessage(msg._id)}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
             <div ref={messagesEndRef} />

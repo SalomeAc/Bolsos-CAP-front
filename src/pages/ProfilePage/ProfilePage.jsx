@@ -10,7 +10,7 @@ import "./ProfilePage.css";
 export function ProfilePage() {
   const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.currentUser);
-  const token = useAuthStore((state) => state.token);
+  const token = useAuthStore((state) => state.authToken);
   const logout = useAuthStore((state) => state.logout);
   const setUser = useAuthStore((state) => state.setUser);
 
@@ -67,7 +67,7 @@ export function ProfilePage() {
       setLoading(true);
       setError("");
       const updatedProfile = await updateUserProfile(token, formData);
-      setUser(updatedProfile, token);
+      useAuthStore.setState({ currentUser: updatedProfile, authToken: token });
       setIsEditing(false);
       alert("Perfil actualizado exitosamente");
     } catch (err) {
@@ -91,7 +91,7 @@ export function ProfilePage() {
     <section className="profile-layout">
       <article className="profile-card profile-card--highlight profile-card--single">
         <span className="eyebrow">Perfil</span>
-        <h1>{currentUser ? `Perfil de ${currentUser.name}` : 'Perfil de cliente'}</h1>
+        <h1>{currentUser ? `Perfil de ${currentUser.firstName} ${currentUser.lastName}`.trim() : 'Perfil de cliente'}</h1>
         <p>
           {currentUser
             ? 'Estos son los datos básicos de tu cuenta.'
