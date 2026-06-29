@@ -57,6 +57,7 @@ export function QuotationSummaryPage() {
           type: summary.type,
           color: summary.selectedColor || '',
           size: summary.selectedDimension,
+          material: summary.selectedMaterial,
         },
         quantity: 1,
         notes: 'Cotización creada desde el catálogo',
@@ -93,8 +94,6 @@ export function QuotationSummaryPage() {
     )
   }
 
-  const colors = formatList(summary.selectedColors ?? summary.selectedColor)
-
   return (
     <section className="section-block">
       <div className="section-heading">
@@ -128,13 +127,6 @@ export function QuotationSummaryPage() {
               
               <p><strong>Material:</strong> {summary.selectedMaterial || 'No especificado'}</p>
 
-              {summary.materials && (
-                <p><strong>Materiales disponibles:</strong> {summary.materials}</p>
-              )}
-
-              {summary.colors && (
-                <p><strong>Colores disponibles:</strong> {summary.colors}</p>
-              )}
             </div>
 
             {error && (

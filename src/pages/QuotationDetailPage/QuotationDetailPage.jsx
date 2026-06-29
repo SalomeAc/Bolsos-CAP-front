@@ -150,6 +150,9 @@ export function QuotationDetailPage() {
                   {quotation.customization.size && (
                     <p><strong>Tamaño:</strong> {quotation.customization.size}</p>
                   )}
+                  {quotation.customization.material && (
+                    <p><strong>Material:</strong> {quotation.customization.material}</p>
+                  )}
                 </div>
               )}
             </div>
