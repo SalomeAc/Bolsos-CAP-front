@@ -6,6 +6,7 @@ import {
 } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
+import { Modal } from "../../components/Modal/Modal.jsx";
 import "./HistorialCotizacionesPage.css";
 import VoiceButton from "../../components/VoiceButton/VoiceButton";
 import "../../components/VoiceButton/VoiceButton.css";
@@ -20,9 +21,9 @@ const statusOptions = [
 
 const VOICE_STATUS_MAP = {
   pendiente: "pendiente",
-  "revisión": "en_revision",
+  revisión: "en_revision",
   revision: "en_revision",
-  "producción": "en_produccion",
+  producción: "en_produccion",
   produccion: "en_produccion",
   completada: "completada",
   cancelada: "cancelada",
@@ -71,7 +72,9 @@ function formatDate(value) {
 }
 
 function getQuotationPrice(quotation) {
-  return quotation?.finalQuotation?.amount ?? quotation?.aiQuotation?.amount ?? null;
+  return (
+    quotation?.finalQuotation?.amount ?? quotation?.aiQuotation?.amount ?? null
+  );
 }
 
 function formatPrice(quotation) {
@@ -117,6 +120,7 @@ export function HistorialCotizacionesPage() {
   // Feedback visual del texto reconocido (de la versión 2)
   const [voiceLabel, setVoiceLabel] = useState(null);
   const [traceabilityQuotationId, setTraceabilityQuotationId] = useState(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
 
   useEffect(() => {
     if (!userIsAdmin) navigate("/");
@@ -132,7 +136,9 @@ export function HistorialCotizacionesPage() {
         setQuotations(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error loading quotation history:", err);
-        setError(err.message || "No se pudo cargar el historial de cotizaciones");
+        setError(
+          err.message || "No se pudo cargar el historial de cotizaciones",
+        );
       } finally {
         setLoading(false);
       }
@@ -148,10 +154,7 @@ export function HistorialCotizacionesPage() {
     for (const [keyword, statusValue] of Object.entries(VOICE_STATUS_MAP)) {
       if (toPhonetic(command).includes(toPhonetic(keyword))) {
         detectedStatus = statusValue;
-        remaining = remaining
-          .toLowerCase()
-          .replace(keyword, "")
-          .trim();
+        remaining = remaining.toLowerCase().replace(keyword, "").trim();
         break;
       }
     }
@@ -171,17 +174,35 @@ export function HistorialCotizacionesPage() {
     setVoiceLabel(null);
   };
 
-  const handleStatusChange = async (quotationId, newStatus) => {
+  const handleStatusChangeSelection = (
+    quotationId,
+    newStatus,
+    currentStatus,
+  ) => {
+    setPendingStatusChange({ quotationId, newStatus, currentStatus });
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+
+    const { quotationId, newStatus, currentStatus } = pendingStatusChange;
+    if (newStatus === currentStatus) {
+      setPendingStatusChange(null);
+      return;
+    }
+
     try {
       await updateQuotationStatus(quotationId, newStatus, token);
       setQuotations((prev) =>
         prev.map((q) =>
-          q._id === quotationId ? { ...q, status: newStatus } : q
-        )
+          q._id === quotationId ? { ...q, status: newStatus } : q,
+        ),
       );
     } catch (err) {
       console.error(err);
       alert("No se pudo actualizar el estado");
+    } finally {
+      setPendingStatusChange(null);
     }
   };
 
@@ -218,7 +239,8 @@ export function HistorialCotizacionesPage() {
 
         const matchesDate =
           !dateFilter ||
-          new Date(quotation.createdAt).toLocaleDateString("en-CA") === dateFilter;
+          new Date(quotation.createdAt).toLocaleDateString("en-CA") ===
+            dateFilter;
 
         // Filtro de voz (fonético, independiente)
         const matchesVoiceQuery =
@@ -240,8 +262,18 @@ export function HistorialCotizacionesPage() {
           matchesVoiceStatus
         );
       })
-      .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
-  }, [quotations, searchTerm, productFilter, statusFilter, dateFilter, voiceQuery, voiceStatus]);
+      .sort(
+        (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0),
+      );
+  }, [
+    quotations,
+    searchTerm,
+    productFilter,
+    statusFilter,
+    dateFilter,
+    voiceQuery,
+    voiceStatus,
+  ]);
 
   if (!userIsAdmin) return null;
 
@@ -437,7 +469,11 @@ export function HistorialCotizacionesPage() {
                           value={quotation.status}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) =>
-                            handleStatusChange(quotation._id, e.target.value)
+                            handleStatusChangeSelection(
+                              quotation._id,
+                              e.target.value,
+                              quotation.status,
+                            )
                           }
                         >
                           {statusOptions.map((status) => (
@@ -468,7 +504,7 @@ export function HistorialCotizacionesPage() {
                           setTraceabilityQuotationId(
                             traceabilityQuotationId === quotation._id
                               ? null
-                              : quotation._id
+                              : quotation._id,
                           );
                         }}
                       >
@@ -490,6 +526,52 @@ export function HistorialCotizacionesPage() {
           onClose={() => setTraceabilityQuotationId(null)}
         />
       )}
+
+      <Modal
+        open={Boolean(pendingStatusChange)}
+        title="Confirmar cambio de estado"
+        description="Esta acción actualizará la solicitud y enviará una notificación al cliente."
+        onClose={() => setPendingStatusChange(null)}
+      >
+        <p>
+          ¿Deseas continuar con el cambio de estado de esta cotización? El
+          cliente recibirá una notificación informando el cambio.
+        </p>
+        {pendingStatusChange && (
+          <p>
+            <strong>
+              {getStatusLabel(pendingStatusChange.currentStatus)} →{" "}
+              {getStatusLabel(pendingStatusChange.newStatus)}
+            </strong>
+          </p>
+        )}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            marginTop: "16px",
+          }}
+        >
+          <div className="modal-actions">
+  <button
+    type="button"
+    className="modal-button secondary"
+    onClick={() => setPendingStatusChange(null)}
+  >
+    Cancelar
+  </button>
+
+  <button
+    type="button"
+    className="modal-button primary"
+    onClick={confirmStatusChange}
+  >
+    Aceptar
+  </button>
+</div>
+        </div>
+      </Modal>
     </section>
   );
 }
