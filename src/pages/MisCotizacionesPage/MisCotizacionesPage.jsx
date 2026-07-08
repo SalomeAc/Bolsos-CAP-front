@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getMyQuotations } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -20,30 +20,30 @@ export function MisCotizacionesPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Cargar mis cotizaciones
+  const loadQuotations = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      setError(null);
+      const data = await getMyQuotations(token);
+      setQuotations(data);
+    } catch (err) {
+      console.error("Error loading quotations:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
   useEffect(() => {
     if (!token) return;
 
-    const loadQuotations = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getMyQuotations(token);
-        setQuotations(data);
-      } catch (err) {
-        console.error("Error loading quotations:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    setLoading(true);
     loadQuotations();
 
-    // Poll cada 10 segundos
-    const interval = setInterval(loadQuotations, 10000);
+    const interval = setInterval(loadQuotations, 5000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token, loadQuotations]);
 
   useEffect(() => {
     if (quotations.length === 0) return;
@@ -70,6 +70,14 @@ export function MisCotizacionesPage() {
     }
   }, [location.state?.selectedQuotationId]);
 
+  const handleQuotationUpdated = (updated) => {
+    setQuotations((current) =>
+      current.map((quotation) =>
+        quotation._id === updated._id ? updated : quotation,
+      ),
+    );
+  };
+
   // Filtrar cotizaciones por búsqueda
   const filteredQuotations = quotations.filter((q) => {
     const searchText = searchTerm.toLowerCase();
@@ -86,20 +94,20 @@ export function MisCotizacionesPage() {
   });
 
   return (
-    <div className="mis-cotizaciones-container">
-      <div className="mis-cotizaciones-list-section">
-        <div className="mis-cotizaciones-header">
-          <h2>Mis Cotizaciones</h2>
+    <div className="mis-cotizaciones-container client-cotizaciones-layout">
+      <div className="mis-cotizaciones-list-section client-cotizaciones-sidebar">
+        <div className="mis-cotizaciones-header client-cotizaciones-sidebar__header">
+          <h2>Mis cotizaciones</h2>
           <input
-            type="text"
+            type="search"
             placeholder="Buscar producto..."
-            className="search-input"
+            className="search-input client-cotizaciones-sidebar__search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <div className="mis-cotizaciones-list">
+        <div className="mis-cotizaciones-list client-cotizaciones-sidebar__list">
           {loading && <div className="empty-state">Cargando...</div>}
 
           {error && (
@@ -117,7 +125,7 @@ export function MisCotizacionesPage() {
           {sortedQuotations.map((quotation) => (
             <div
               key={quotation._id}
-              className={`quotation-item ${selectedQuotationId === quotation._id ? "active" : ""}`}
+              className={`quotation-item client-cotizaciones-sidebar__item ${selectedQuotationId === quotation._id ? "active" : ""}`}
               onClick={() => setSelectedQuotationId(quotation._id)}
             >
               <div className="quotation-item-avatar">AC</div>
@@ -147,10 +155,10 @@ export function MisCotizacionesPage() {
         </div>
       </div>
 
-      <div className="mis-cotizaciones-detail-section">
+      <div className="mis-cotizaciones-detail-section client-cotizaciones-detail">
         {selectedQuotation ? (
           <>
-            <div className="detail-header">
+            <div className="detail-header detail-header--client">
               <div className="detail-header-content">
                 <h2>Administrador</h2>
                 <p className="detail-email">Bolsos CAP</p>
@@ -164,11 +172,13 @@ export function MisCotizacionesPage() {
 
             {/* product-card-info removed so the chat message is the primary product display */}
 
-            <div className="detail-chat-section">
+            <div className="detail-chat-section client-cotizaciones-chat">
               <h4>Conversación</h4>
               <Chat
                 quotationId={selectedQuotation._id}
                 quotation={selectedQuotation}
+                onQuotationUpdated={handleQuotationUpdated}
+                onRequestQuotationRefresh={loadQuotations}
               />
             </div>
           </>

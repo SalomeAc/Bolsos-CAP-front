@@ -11,8 +11,10 @@ function App() {
   const setProducts = useProductsStore((state) => state.setProducts);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+  console.log("GOOGLE CLIENT ID:", googleClientId);
+  console.log("ALL ENV:", import.meta.env);
+
   useEffect(() => {
-    // Cargar productos solo del backend
     fetchProducts()
       .then((backendProducts) => {
         if (Array.isArray(backendProducts) && backendProducts.length > 0) {

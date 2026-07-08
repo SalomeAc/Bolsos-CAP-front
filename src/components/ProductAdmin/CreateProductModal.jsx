@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Modal } from "../Modal/Modal.jsx";
+import { DimensionsEditor } from "./DimensionsEditor.jsx";
+import { validateDimensionsValue } from "./dimensionsUtils.js";
 import "./CreateProductModal.css";
+import "./DimensionsEditor.css";
 
 const initialFormState = {
   name: "",
@@ -60,8 +63,9 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       nextErrors.color = "El color es obligatorio.";
     }
 
-    if (!formState.dimensions.trim()) {
-      nextErrors.dimensions = "Las dimensiones son obligatorias.";
+    const dimensionsError = validateDimensionsValue(formState.dimensions);
+    if (dimensionsError) {
+      nextErrors.dimensions = dimensionsError;
     }
 
     if (!formState.materials.trim()) {
@@ -77,6 +81,11 @@ export function CreateProductModal({ open, onClose, onCreate }) {
     }
 
     return nextErrors;
+  };
+
+  const handleDimensionsChange = (value) => {
+    setFormState((current) => ({ ...current, dimensions: value }));
+    setErrors((current) => ({ ...current, dimensions: "" }));
   };
 
   const handleChange = (event) => {
@@ -125,6 +134,7 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       title="Crear nuevo producto"
       description="Registra un producto nuevo en el catálogo. Todos los campos son obligatorios y la imagen debe usar una URL válida."
       onClose={onClose}
+      className="edit-product-modal"
     >
       <form className="create-product-form" onSubmit={handleSubmit} noValidate>
         <div className="form-grid">
@@ -158,35 +168,29 @@ export function CreateProductModal({ open, onClose, onCreate }) {
             ) : null}
           </label>
 
-          <label className="form-field">
-            <span>Color</span>
+          <label className="form-field form-field--full">
+            <span>Colores</span>
             <input
               name="color"
               value={formState.color}
               onChange={handleChange}
-              placeholder="Ej. beige, terracota"
+              placeholder="Separa con comas. Ej. beige, terracota, negro"
               autoComplete="off"
               required
             />
+            <p className="form-field__hint">
+              Escribe un color por opción, separados por comas.
+            </p>
             {errors.color ? (
               <span className="field-error">{errors.color}</span>
             ) : null}
           </label>
 
-          <label className="form-field">
-            <span>Dimensiones</span>
-            <input
-              name="dimensions"
-              value={formState.dimensions}
-              onChange={handleChange}
-              placeholder="Ej. 26 x 22 x 8 cm"
-              autoComplete="off"
-              required
-            />
-            {errors.dimensions ? (
-              <span className="field-error">{errors.dimensions}</span>
-            ) : null}
-          </label>
+          <DimensionsEditor
+            value={formState.dimensions}
+            onChange={handleDimensionsChange}
+            error={errors.dimensions}
+          />
 
           <label className="form-field form-field--full">
             <span>Materiales</span>
