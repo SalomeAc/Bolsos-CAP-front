@@ -7,9 +7,9 @@ import {
 import "./ProductVariantsTable.css";
 
 const emptyVariant = {
-  precio_total: 0,
-  precio_material: 0,
-  horas_trabajo: 0,
+  totalPrice: 0,
+  materialPrice: 0,
+  workHours: 6,
 };
 
 export function ProductVariantsTable({ productId, authToken, isActive }) {
@@ -89,9 +89,9 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
         color: variant.color,
         material: variant.material,
         dimensions: variant.dimensions,
-        precio_total: Number(variant.precio_total ?? 0),
-        precio_material: Number(variant.precio_material ?? 0),
-        horas_trabajo: Number(variant.horas_trabajo ?? 0),
+        totalPrice: Number(variant.totalPrice ?? 0),
+        materialPrice: Number(variant.materialPrice ?? 0),
+        workHours: Number(variant.workHours ?? 6),
       }));
 
       const updated = await saveProductVariants(productId, payload, authToken);
@@ -116,8 +116,8 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
     <div className="variants-table">
       <div className="variants-table__toolbar">
         <p>
-          Define el precio total, precio del material y horas de trabajo para
-          cada combinación de color, material y dimensiones.
+          Define el precio total, el precio del material y las horas de trabajo
+          para cada combinación de color, material y dimensiones.
         </p>
         <div className="variants-table__actions">
           <button
@@ -178,9 +178,9 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
                       type="number"
                       min="0"
                       step="1000"
-                      value={variant.precio_total ?? emptyVariant.precio_total}
+                      value={variant.totalPrice ?? emptyVariant.totalPrice}
                       onChange={(event) =>
-                        handleFieldChange(index, "precio_total", event.target.value)
+                        handleFieldChange(index, "totalPrice", event.target.value)
                       }
                     />
                   </td>
@@ -189,9 +189,9 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
                       type="number"
                       min="0"
                       step="1000"
-                      value={variant.precio_material ?? emptyVariant.precio_material}
+                      value={variant.materialPrice ?? emptyVariant.materialPrice}
                       onChange={(event) =>
-                        handleFieldChange(index, "precio_material", event.target.value)
+                        handleFieldChange(index, "materialPrice", event.target.value)
                       }
                     />
                   </td>
@@ -200,9 +200,9 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
                       type="number"
                       min="0"
                       step="0.5"
-                      value={variant.horas_trabajo ?? emptyVariant.horas_trabajo}
+                      value={variant.workHours ?? emptyVariant.workHours}
                       onChange={(event) =>
-                        handleFieldChange(index, "horas_trabajo", event.target.value)
+                        handleFieldChange(index, "workHours", event.target.value)
                       }
                     />
                   </td>

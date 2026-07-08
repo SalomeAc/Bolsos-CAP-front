@@ -55,7 +55,7 @@ export function AdminAiQuotationPanel({
   const [error, setError] = useState(null);
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [modifyAmount, setModifyAmount] = useState("");
-  const [modifyNotes, setModifyNotes] = useState("");
+  const [modifyBreakdown, setModifyBreakdown] = useState("");
 
   useEffect(() => {
     setExpanded(false);
@@ -160,19 +160,18 @@ export function AdminAiQuotationPanel({
       : ai.amount;
   const amountLabel = formatCurrency(defaultAmount, currency);
 
-  const sendToClient = async ({ amount, notes }) => {
+  const sendToClient = async ({ amount, breakdown }) => {
     try {
       setSaving(true);
       setError(null);
-      const updated = await setFinalQuotation(
-        quotation._id,
-        {
-          amount: Number(amount),
-          currency,
-          ...(notes ? { notes } : {}),
-        },
-        token,
-      );
+      const payload = {
+        amount: Number(amount),
+        currency,
+      };
+      if (breakdown != null && String(breakdown).trim() !== "") {
+        payload.breakdown = String(breakdown).trim();
+      }
+      const updated = await setFinalQuotation(quotation._id, payload, token);
       onQuotationUpdated?.(updated);
       setShowModifyModal(false);
     } catch (err) {
@@ -190,9 +189,9 @@ export function AdminAiQuotationPanel({
   const openModifyModal = (event) => {
     event.stopPropagation();
     setModifyAmount(String(defaultAmount ?? ""));
-    setModifyNotes(
+    setModifyBreakdown(
       quotation.status === "en_revision"
-        ? quotation.clientResponse?.notes || ""
+        ? quotation.aiQuotation?.breakdown || ""
         : ai.breakdown || "",
     );
     setShowModifyModal(true);
@@ -205,7 +204,7 @@ export function AdminAiQuotationPanel({
     }
     sendToClient({
       amount: Number(modifyAmount),
-      notes: modifyNotes,
+      breakdown: modifyBreakdown,
     });
   };
 
@@ -258,7 +257,7 @@ export function AdminAiQuotationPanel({
       <Modal
         open={showModifyModal}
         title="Modificar cotización"
-        description="Ajusta el monto o las notas antes de enviar al cliente."
+        description="Ajusta el monto o los criterios de IA antes de enviar la cotización al cliente."
         onClose={() => setShowModifyModal(false)}
       >
         <div className="admin-ai-quotation-panel__form">
@@ -270,12 +269,15 @@ export function AdminAiQuotationPanel({
             value={modifyAmount}
             onChange={(e) => setModifyAmount(e.target.value)}
           />
-          <label htmlFor="modify-notes">Notas para el cliente</label>
+          <label htmlFor="modify-breakdown">
+            Criterios de IA para generar cotización
+          </label>
           <textarea
-            id="modify-notes"
+            id="modify-breakdown"
             rows={4}
-            value={modifyNotes}
-            onChange={(e) => setModifyNotes(e.target.value)}
+            value={modifyBreakdown}
+            onChange={(e) => setModifyBreakdown(e.target.value)}
+            placeholder="Justificación o criterios usados por la IA (referencia interna, no se envía al cliente)."
           />
         </div>
         <div className="modal-actions">

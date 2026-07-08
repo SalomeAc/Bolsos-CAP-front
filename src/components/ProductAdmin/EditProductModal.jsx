@@ -150,7 +150,7 @@ export function EditProductModal({
       description={
         activeTab === "details"
           ? "Actualiza la información del producto. Todos los campos son obligatorios."
-          : "Configura precios por combinación de color, material y dimensiones."
+          : "Configura el precio total y el precio del material por combinación."
       }
       onClose={onClose}
       className={modalClassName}
