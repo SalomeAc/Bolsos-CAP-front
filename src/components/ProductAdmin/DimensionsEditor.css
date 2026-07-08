@@ -1,0 +1,124 @@
+.dimensions-editor {
+  gap: 12px;
+}
+
+.dimensions-editor__header span {
+  font-weight: 700;
+  color: #2c2438;
+}
+
+.dimensions-editor__hint {
+  margin: 6px 0 0;
+  color: #6b617a;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.dimensions-editor__list {
+  display: grid;
+  gap: 12px;
+}
+
+.dimensions-editor__row {
+  padding: 14px;
+  border: 1px solid #e9def6;
+  border-radius: 16px;
+  background: #faf8fd;
+}
+
+.dimensions-editor__row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #574685;
+}
+
+.dimensions-editor__preview {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #efe8f8;
+  color: #2c2438;
+  font-weight: 600;
+}
+
+.dimensions-editor__inputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.dimensions-editor__inputs label {
+  display: grid;
+  gap: 6px;
+}
+
+.dimensions-editor__inputs label span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5f5470;
+}
+
+.dimensions-editor__inputs input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e9def6;
+  background: #fff;
+  color: #2c2438;
+  font: inherit;
+}
+
+.dimensions-editor__inputs input:focus {
+  outline: 2px solid rgba(134, 104, 176, 0.35);
+  outline-offset: 2px;
+}
+
+.dimensions-editor__remove {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #ecd9de;
+  border-radius: 12px;
+  background: #fff;
+  color: #842029;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dimensions-editor__remove:hover {
+  background: #fff5f5;
+}
+
+.dimensions-editor__add {
+  align-self: start;
+  padding: 10px 14px;
+  border: 1px dashed #c9b8e4;
+  border-radius: 12px;
+  background: #fff;
+  color: #6a4f96;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dimensions-editor__add:hover {
+  background: #f7f3fc;
+}
+
+@media (max-width: 720px) {
+  .dimensions-editor__inputs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dimensions-editor__remove {
+    grid-column: 1 / -1;
+  }
+}

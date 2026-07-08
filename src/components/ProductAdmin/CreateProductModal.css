@@ -68,6 +68,17 @@
   }
 }
 
+.edit-product-modal .modal-shell {
+  width: min(860px, 94vw);
+}
+
+.form-field__hint {
+  margin: 0;
+  color: #6b617a;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
 
 
 

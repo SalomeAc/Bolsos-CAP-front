@@ -471,6 +471,7 @@ export function ProductPage({ product }) {
       <EditProductModal
         open={isEditingModalOpen}
         product={product}
+        authToken={authToken}
         onClose={() => setIsEditingModalOpen(false)}
         onSave={handleSaveProduct}
       />

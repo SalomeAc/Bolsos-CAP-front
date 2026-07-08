@@ -85,18 +85,23 @@ export async function createQuotation(quotationData, token) {
 /**
  * Responder a una cotización (aceptar o rechazar)
  * @param {string} quotationId - ID de la cotización
- * @param {string} decision - 'aceptada' o 'rechazada'
+ * @param {string|Object} decisionOrPayload - 'aceptada' | 'rechazada' | 'propuesta' o payload completo
  * @param {string} token - Token JWT del usuario
  * @returns {Promise<Object>} Objeto de la cotización actualizada
  */
-export async function respondQuotation(quotationId, decision, token) {
+export async function respondQuotation(quotationId, decisionOrPayload, token) {
+  const payload =
+    typeof decisionOrPayload === 'string'
+      ? { decision: decisionOrPayload }
+      : decisionOrPayload
+
   const response = await fetch(`${API_BASE_URL}/api/quotations/${quotationId}/respond`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ decision }),
+    body: JSON.stringify(payload),
   })
 
   return handleResponse(response)

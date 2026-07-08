@@ -8,6 +8,7 @@ export function Modal({
   description,
   onClose,
   children,
+  className = "",
 }) {
   useEffect(() => {
     if (!open) return;
@@ -32,7 +33,7 @@ export function Modal({
   if (!open) return null;
 
   return createPortal(
-    <div className="modal-overlay">
+    <div className={`modal-overlay ${className}`.trim()}>
       <div className="modal-shell">
         <header className="modal-header">
           <div>
