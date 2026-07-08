@@ -1,41 +1,53 @@
-import { useEffect } from 'react'
-import './Modal.css'
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import "./Modal.css";
 
-export function Modal({ open, title, description, onClose, children }) {
+export function Modal({
+  open,
+  title,
+  description,
+  onClose,
+  children,
+}) {
   useEffect(() => {
-    if (!open) return undefined
+    if (!open) return;
+
+    document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        onClose()
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
+    document.addEventListener("keydown", handleKeyDown);
 
-  if (!open) {
-    return null
-  }
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
 
-  return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
+  if (!open) return null;
+
+  return createPortal(
+    <div className="modal-overlay">
       <div className="modal-shell">
         <header className="modal-header">
           <div>
-            <h2 id="modal-title">{title}</h2>
-            {description ? (
-              <p id="modal-description">{description}</p>
-            ) : null}
+            <h2>{title}</h2>
+            {description && <p>{description}</p>}
           </div>
-          <button className="modal-close" type="button" onClick={onClose} aria-label="Cerrar modal">
-            ✕
-          </button>
+
+          <button className="modal-close" onClick={onClose}>✕</button>
         </header>
-        <div className="modal-content">{children}</div>
+
+        <div className="modal-content">
+          {children}
+        </div>
       </div>
-    </div>
-  )
+    </div>,
+    document.body
+  );
 }
