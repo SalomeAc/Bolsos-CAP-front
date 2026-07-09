@@ -5,7 +5,6 @@ import VoiceButton from "../../components/VoiceButton/VoiceButton";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { useProductsStore } from "../../store/useProductsStore.js";
 import {
-  createProduct as createProductApi,
   fetchProducts,
 } from "../../services/productService.js";
 import "./CatalogPage.css";
@@ -44,15 +43,9 @@ export function CatalogPage() {
     loadProducts();
   }, [setProducts]);
 
-  const handleCreateProduct = async (product) => {
-    try {
-      const createdProduct = await createProductApi(product, authToken);
-      addProduct(createdProduct);
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error(error);
-      alert(`No se pudo crear el producto: ${error.message}`);
-    }
+  const handleProductCreated = (createdProduct) => {
+    addProduct(createdProduct);
+    setIsModalOpen(false);
   };
 
   return (
@@ -107,7 +100,8 @@ export function CatalogPage() {
       <CreateProductModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={handleCreateProduct}
+        authToken={authToken}
+        onCreated={handleProductCreated}
       />
     </div>
   );
