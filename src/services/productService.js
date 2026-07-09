@@ -75,6 +75,24 @@ export async function createProduct(product, token) {
   return handleResponse(response)
 }
 
+/**
+ * Crear producto desde formulario admin (multipart + foto obligatoria)
+ * @param {FormData} formData - name, description, type, color, dimensions, materials, photo
+ * @param {string} token - Token JWT
+ */
+export async function createProductForm(formData, token) {
+  const response = await fetch(`${API_BASE_URL}/api/products`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      // NO establecer Content-Type: el navegador agrega el boundary de multipart
+    },
+    body: formData,
+  })
+
+  return handleResponse(response)
+}
+
 export async function updateProduct(productId, product, token) {
   const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
     method: 'PUT',
@@ -83,6 +101,35 @@ export async function updateProduct(productId, product, token) {
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(buildProductPayload(product)),
+  })
+
+  return handleResponse(response)
+}
+
+/**
+ * Actualizar producto desde formulario admin (multipart + foto opcional)
+ * @param {string} productId
+ * @param {FormData} formData - name, description, type, color, dimensions, materials, photo?
+ * @param {string} token
+ */
+export async function updateProductForm(productId, formData, token) {
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  return handleResponse(response)
+}
+
+export async function deleteProductPhoto(productId, token) {
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}/photo`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
   })
 
   return handleResponse(response)

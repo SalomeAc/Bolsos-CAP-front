@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  deleteProductVariant,
   fetchProductVariants,
   saveProductVariants,
   syncProductVariants,
 } from "../../services/productVariantService.js";
+import { DeleteVariantConfirmationModal } from "./DeleteVariantConfirmationModal.jsx";
+import { VariantDescriptionModal } from "./VariantDescriptionModal.jsx";
 import "./ProductVariantsTable.css";
 
 const emptyVariant = {
@@ -17,6 +20,10 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [deletingVariantId, setDeletingVariantId] = useState(null);
+  const [variantToDelete, setVariantToDelete] = useState(null);
+  const [variantToDescribe, setVariantToDescribe] = useState(null);
+  const [savingDescriptionVariantId, setSavingDescriptionVariantId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -28,7 +35,7 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
 
     try {
       const data = await fetchProductVariants(productId, authToken, {
-        sync: true,
+        sync: false,
       });
       setVariants(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -76,6 +83,98 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
     }
   };
 
+  const handleDeleteRequest = (variant) => {
+    if (!variant?._id) return;
+    setVariantToDelete(variant);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (deletingVariantId) return;
+    setVariantToDelete(null);
+  };
+
+  const handleConfirmDelete = async (variant) => {
+    if (!productId || !authToken || !variant?._id) return;
+
+    setDeletingVariantId(variant._id);
+    setError("");
+    setSuccess("");
+
+    try {
+      await deleteProductVariant(productId, variant._id, authToken);
+      setVariants((current) =>
+        current.filter((item) => item._id !== variant._id),
+      );
+      setSuccess("Variante eliminada correctamente.");
+      setVariantToDelete(null);
+    } catch (err) {
+      setError(err.message || "No se pudo eliminar la variante.");
+    } finally {
+      setDeletingVariantId(null);
+    }
+  };
+
+  const handleOpenDescriptionModal = (variant) => {
+    if (!variant?._id) return;
+
+    const latestVariant =
+      variants.find((item) => String(item._id) === String(variant._id)) ??
+      variant;
+
+    setVariantToDescribe(latestVariant);
+  };
+
+  const handleCloseDescriptionModal = () => {
+    if (savingDescriptionVariantId) return;
+    setVariantToDescribe(null);
+  };
+
+  const handleSaveDescription = async (variant, descriptionImagen) => {
+    if (!productId || !authToken || !variant?._id) return;
+
+    setSavingDescriptionVariantId(variant._id);
+    setError("");
+    setSuccess("");
+
+    try {
+      const payload = [
+        {
+          _id: variant._id,
+          color: variant.color,
+          material: variant.material,
+          dimensions: variant.dimensions,
+          totalPrice: Number(variant.totalPrice ?? 0),
+          materialPrice: Number(variant.materialPrice ?? 0),
+          workHours: Number(variant.workHours ?? 6),
+          descriptionImagen: descriptionImagen || null,
+        },
+      ];
+
+      const updated = await saveProductVariants(productId, payload, authToken);
+      const savedVariant = Array.isArray(updated)
+        ? updated.find((item) => String(item._id) === String(variant._id))
+        : null;
+
+      setVariants((current) =>
+        current.map((item) =>
+          item._id === variant._id
+            ? {
+                ...item,
+                descriptionImagen:
+                  (savedVariant?.descriptionImagen ?? descriptionImagen) || null,
+              }
+            : item,
+        ),
+      );
+      setSuccess("Descripción de imagen guardada.");
+      setVariantToDescribe(null);
+    } catch (err) {
+      setError(err.message || "No se pudo guardar la descripción de imagen.");
+    } finally {
+      setSavingDescriptionVariantId(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!productId || !authToken) return;
 
@@ -92,13 +191,14 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
         totalPrice: Number(variant.totalPrice ?? 0),
         materialPrice: Number(variant.materialPrice ?? 0),
         workHours: Number(variant.workHours ?? 6),
+        descriptionImagen: variant.descriptionImagen ?? null,
       }));
 
       const updated = await saveProductVariants(productId, payload, authToken);
       setVariants(Array.isArray(updated) ? updated : variants);
-      setSuccess("Precios guardados correctamente.");
+      setSuccess("Variantes guardadas correctamente.");
     } catch (err) {
-      setError(err.message || "No se pudieron guardar los precios.");
+      setError(err.message || "No se pudieron guardar las variantes.");
     } finally {
       setSaving(false);
     }
@@ -134,7 +234,7 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
             onClick={handleSave}
             disabled={saving || loading || variants.length === 0}
           >
-            {saving ? "Guardando..." : "Guardar precios"}
+            {saving ? "Guardando..." : "Guardar variantes"}
           </button>
         </div>
       </div>
@@ -164,6 +264,8 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
                 <th>Precio total</th>
                 <th>Precio material</th>
                 <th>Horas trabajo</th>
+                <th>Desc. imagen</th>
+                <th aria-label="Acciones" />
               </tr>
             </thead>
             <tbody>
@@ -206,12 +308,81 @@ export function ProductVariantsTable({ productId, authToken, isActive }) {
                       }
                     />
                   </td>
+                  <td className="variants-table__icon-cell">
+                    <button
+                      type="button"
+                      className={`variants-table__description-btn${
+                        variant.descriptionImagen ? " has-description" : ""
+                      }`}
+                      onClick={() => handleOpenDescriptionModal(variant)}
+                      disabled={saving || syncing || loading}
+                      aria-label={
+                        variant.descriptionImagen
+                          ? `Editar descripción de imagen de ${variant.sku || "variante"}`
+                          : `Agregar descripción de imagen de ${variant.sku || "variante"}`
+                      }
+                      title={
+                        variant.descriptionImagen
+                          ? "Editar descripción de imagen"
+                          : "Agregar descripción de imagen"
+                      }
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        aria-hidden="true"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                      </svg>
+                    </button>
+                  </td>
+                  <td className="variants-table__actions-cell">
+                    <button
+                      type="button"
+                      className="button button-danger variants-table__delete"
+                      onClick={() => handleDeleteRequest(variant)}
+                      disabled={
+                        deletingVariantId === variant._id ||
+                        saving ||
+                        syncing ||
+                        loading
+                      }
+                      aria-label={`Eliminar variante ${variant.sku || index + 1}`}
+                    >
+                      {deletingVariantId === variant._id
+                        ? "Eliminando..."
+                        : "Eliminar"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+      <DeleteVariantConfirmationModal
+        open={Boolean(variantToDelete)}
+        variant={variantToDelete}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        isLoading={Boolean(deletingVariantId)}
+      />
+      <VariantDescriptionModal
+        key={variantToDescribe?._id ?? "variant-description-closed"}
+        open={Boolean(variantToDescribe)}
+        variant={variantToDescribe}
+        onClose={handleCloseDescriptionModal}
+        onSave={handleSaveDescription}
+        isLoading={Boolean(savingDescriptionVariantId)}
+      />
     </div>
   );
 }

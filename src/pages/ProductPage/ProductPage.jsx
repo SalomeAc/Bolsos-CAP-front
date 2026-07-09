@@ -4,7 +4,6 @@ import { DeleteConfirmationModal } from "../../components/ProductAdmin/DeleteCon
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { useProductsStore } from "../../store/useProductsStore.js";
 import {
-  updateProduct as updateProductApi,
   deleteProduct as deleteProductApi,
 } from "../../services/productService.js";
 import { Link, useNavigate } from "react-router-dom";
@@ -133,7 +132,6 @@ export function ProductPage({ product }) {
   const deleteProductLocal = useProductsStore((state) => state.deleteProduct);
   const isAdmin = useAuthStore((state) => state.currentUser?.isAdmin);
   const authToken = useAuthStore((state) => state.authToken);
-  const [isSaving, setIsSaving] = useState(false);
 
   console.log("PRODUCT RAW:", product);
 
@@ -168,31 +166,13 @@ export function ProductPage({ product }) {
     );
   }
 
-  const handleSaveProduct = async (updates) => {
-    setIsSaving(true);
+  const handleSaveProduct = (updatedProduct) => {
+    updateProductLocal(product.code || product._id, updatedProduct);
+    setIsEditingModalOpen(false);
+  };
 
-    try {
-      if (product._id) {
-        const updatedProduct = await updateProductApi(
-          product._id,
-          {
-            ...product,
-            ...updates,
-          },
-          authToken,
-        );
-        updateProductLocal(product.code || product._id, updatedProduct);
-      } else {
-        updateProductLocal(product.code || product._id, updates);
-      }
-
-      setIsEditingModalOpen(false);
-    } catch (error) {
-      console.error(error);
-      alert(`No se pudo actualizar el producto: ${error.message}`);
-    } finally {
-      setIsSaving(false);
-    }
+  const handleProductUpdate = (updatedProduct) => {
+    updateProductLocal(product.code || product._id, updatedProduct);
   };
 
   const handleConfirmDelete = async (productToDelete) => {
@@ -474,6 +454,7 @@ export function ProductPage({ product }) {
         authToken={authToken}
         onClose={() => setIsEditingModalOpen(false)}
         onSave={handleSaveProduct}
+        onProductUpdate={handleProductUpdate}
       />
 
       <DeleteConfirmationModal
