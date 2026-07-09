@@ -1,0 +1,37 @@
+.variant-description-form {
+  display: grid;
+  gap: 20px;
+}
+
+.variant-description-field {
+  display: grid;
+  gap: 8px;
+}
+
+.variant-description-field span {
+  font-weight: 600;
+  color: #2c2438;
+}
+
+.variant-description-field textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 12px 14px;
+  border: 1px solid #e9def6;
+  border-radius: 14px;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.variant-description-field textarea:focus {
+  outline: 2px solid rgba(134, 104, 176, 0.25);
+  border-color: #8668b0;
+}
+
+.variant-description-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}

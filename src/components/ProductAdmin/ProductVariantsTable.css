@@ -28,7 +28,7 @@
 
 .variants-table table {
   width: 100%;
-  min-width: 860px;
+  min-width: 1040px;
   border-collapse: collapse;
   background: #fff;
 }
@@ -68,6 +68,53 @@
 
 .variants-table__feedback--success {
   color: #1f7a44;
+}
+
+.variants-table__actions-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.variants-table__delete {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.variants-table__icon-cell {
+  width: 1%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.variants-table__description-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #e9def6;
+  border-radius: 10px;
+  background: #fff;
+  color: #8668b0;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.variants-table__description-btn:hover:not(:disabled) {
+  background: #faf7fd;
+  border-color: #8668b0;
+}
+
+.variants-table__description-btn.has-description {
+  background: #f3ecfb;
+  border-color: #8668b0;
+  color: #5f4680;
+}
+
+.variants-table__description-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .edit-product-modal--wide .modal-shell {

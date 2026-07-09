@@ -41,7 +41,7 @@ export function parseDimensionsValue(value) {
 export function serializeDimensions(rows = []) {
   return rows
     .filter((row) => row.width && row.height && row.depth)
-    .map((row) => `${row.width} x ${row.height} x ${row.depth} cm`)
+    .map((row) => `${row.width} x ${row.height} x ${row.depth}`)
     .join(", ");
 }
 

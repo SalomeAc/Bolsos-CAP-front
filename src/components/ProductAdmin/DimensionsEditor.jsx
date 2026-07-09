@@ -52,7 +52,7 @@ export function DimensionsEditor({ value, onChange, error }) {
         {rows.map((row, index) => {
           const preview =
             row.width && row.height && row.depth
-              ? `${row.width} x ${row.height} x ${row.depth} cm`
+              ? `${row.width} x ${row.height} x ${row.depth}`
               : null;
 
           return (
