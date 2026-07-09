@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getQuotation, respondQuotation } from '../../services/quotationService'
 import { Chat } from '../../components/Chat/Chat'
 import { useAuthStore } from '../../store/useAuthStore'
+import { getQuotationStatusLabel } from '../../utils/quotationStatus.js'
 import './QuotationDetailPage.css'
 
 export function QuotationDetailPage() {
@@ -136,7 +137,7 @@ export function QuotationDetailPage() {
               <div className="info-item">
                 <label>Estado</label>
                 <span className={`status-badge status-${quotation.status}`}>
-                  {getStatusLabel(quotation.status)}
+                  {getQuotationStatusLabel(quotation.status)}
                 </span>
               </div>
               <div className="info-item">
@@ -292,7 +293,7 @@ export function QuotationDetailPage() {
           {quotation.clientResponse && (
             <div className="quotation-info-section">
               <h2>Tu respuesta registrada</h2>
-              <p><strong>Decisión:</strong> {getStatusLabel(quotation.clientResponse.decision)}</p>
+              <p><strong>Decisión:</strong> {getQuotationStatusLabel(quotation.clientResponse.decision)}</p>
               {quotation.clientResponse.proposedAmount != null && (
                 <p>
                   <strong>Precio propuesto:</strong>{' '}
@@ -333,21 +334,4 @@ export function QuotationDetailPage() {
       </div>
     </section>
   )
-}
-
-// Función auxiliar para obtener etiqueta de estado
-function getStatusLabel(status) {
-  const labels = {
-    'pendiente': 'Pendiente',
-    'cotizada_ia': 'Cotizada (IA)',
-    'en_revision': 'En Revisión',
-    'cotizada': 'Cotizada',
-    'propuesta': 'Propuesta enviada',
-    'aceptada': 'Aceptada',
-    'rechazada': 'Rechazada',
-    'en_produccion': 'En Producción',
-    'completada': 'Completada',
-    'cancelada': 'Cancelada',
-  }
-  return labels[status] || status
 }

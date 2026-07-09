@@ -9,18 +9,12 @@ import { Modal } from "../../components/Modal/Modal.jsx";
 import "./HistorialCotizacionesPage.css";
 import VoiceButton from "../../components/VoiceButton/VoiceButton";
 import "../../components/VoiceButton/VoiceButton.css";
+import {
+  getQuotationStatusLabel,
+  QUOTATION_STATUS_OPTIONS,
+} from "../../utils/quotationStatus.js";
 
-const statusOptions = [
-  { value: "pendiente", label: "Pendiente" },
-  { value: "cotizada_ia", label: "Cotizada (IA)" },
-  { value: "en_revision", label: "En revisión" },
-  { value: "cotizada", label: "Cotizada" },
-  { value: "aceptada", label: "Aceptada" },
-  { value: "rechazada", label: "Rechazada" },
-  { value: "en_produccion", label: "En producción" },
-  { value: "completada", label: "Completada" },
-  { value: "cancelada", label: "Cancelada" },
-];
+const statusOptions = QUOTATION_STATUS_OPTIONS;
 
 const VOICE_STATUS_MAP = {
   pendiente: "pendiente",
@@ -46,21 +40,6 @@ function toPhonetic(str) {
 function phoneticIncludes(text, term) {
   if (!term) return true;
   return toPhonetic(text).includes(toPhonetic(term));
-}
-
-function getStatusLabel(status) {
-  const labels = {
-    pendiente: "Pendiente",
-    cotizada_ia: "Cotizada (IA)",
-    en_revision: "En revisión",
-    cotizada: "Cotizada",
-    aceptada: "Aceptada",
-    rechazada: "Rechazada",
-    en_produccion: "En producción",
-    completada: "Completada",
-    cancelada: "Cancelada",
-  };
-  return labels[status] || status || "Sin estado";
 }
 
 function formatDate(value) {
@@ -123,6 +102,7 @@ export function HistorialCotizacionesPage() {
   // Feedback visual del texto reconocido (de la versión 2)
   const [voiceLabel, setVoiceLabel] = useState(null);
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
+  const [statusSaving, setStatusSaving] = useState(false);
 
   const goToQuotationChat = (quotationId) => {
     navigate("/cotizaciones", {
@@ -191,7 +171,7 @@ export function HistorialCotizacionesPage() {
   };
 
   const confirmStatusChange = async () => {
-    if (!pendingStatusChange) return;
+    if (!pendingStatusChange || !token) return;
 
     const { quotationId, newStatus, currentStatus } = pendingStatusChange;
     if (newStatus === currentStatus) {
@@ -200,18 +180,32 @@ export function HistorialCotizacionesPage() {
     }
 
     try {
+      setStatusSaving(true);
       await updateQuotationStatus(quotationId, newStatus, token);
       setQuotations((prev) =>
         prev.map((q) =>
-          q._id === quotationId ? { ...q, status: newStatus } : q,
+          String(q._id) === String(quotationId)
+            ? { ...q, status: newStatus }
+            : q,
         ),
       );
     } catch (err) {
       console.error(err);
-      alert("No se pudo actualizar el estado");
+      alert(err.message || "No se pudo actualizar el estado");
     } finally {
+      setStatusSaving(false);
       setPendingStatusChange(null);
     }
+  };
+
+  const getRowStatusValue = (quotation) => {
+    if (
+      pendingStatusChange &&
+      String(pendingStatusChange.quotationId) === String(quotation._id)
+    ) {
+      return pendingStatusChange.newStatus;
+    }
+    return quotation.status;
   };
 
   const filteredQuotations = useMemo(() => {
@@ -319,7 +313,7 @@ export function HistorialCotizacionesPage() {
                 )}
                 {voiceStatus !== "all" && (
                   <span className="voice-badge">
-                    {getStatusLabel(voiceStatus)}
+                    {getQuotationStatusLabel(voiceStatus)}
                   </span>
                 )}
               </>
@@ -477,8 +471,8 @@ export function HistorialCotizacionesPage() {
                       >
                         <select
                           id={`status-${quotation._id}`}
-                          className={`historial-cell-control historial-status-select status-${quotation.status}`}
-                          value={quotation.status}
+                          className={`historial-cell-control historial-status-select status-${getRowStatusValue(quotation)}`}
+                          value={getRowStatusValue(quotation)}
                           aria-label={`Estado de ${getCustomerName(quotation)}`}
                           onChange={(e) =>
                             handleStatusChangeSelection(
@@ -527,7 +521,7 @@ export function HistorialCotizacionesPage() {
         open={Boolean(pendingStatusChange)}
         title="Confirmar cambio de estado"
         description="Esta acción actualizará la solicitud y enviará una notificación al cliente."
-        onClose={() => setPendingStatusChange(null)}
+        onClose={() => !statusSaving && setPendingStatusChange(null)}
       >
         <p>
           ¿Deseas continuar con el cambio de estado de esta cotización? El
@@ -536,36 +530,29 @@ export function HistorialCotizacionesPage() {
         {pendingStatusChange && (
           <p>
             <strong>
-              {getStatusLabel(pendingStatusChange.currentStatus)} →{" "}
-              {getStatusLabel(pendingStatusChange.newStatus)}
+              {getQuotationStatusLabel(pendingStatusChange.currentStatus)} →{" "}
+              {getQuotationStatusLabel(pendingStatusChange.newStatus)}
             </strong>
           </p>
         )}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            marginTop: "16px",
-          }}
-        >
-          <div className="modal-actions">
-  <button
-    type="button"
-    className="modal-button secondary"
-    onClick={() => setPendingStatusChange(null)}
-  >
-    Cancelar
-  </button>
+        <div className="modal-actions">
+          <button
+            type="button"
+            className="modal-button secondary"
+            onClick={() => setPendingStatusChange(null)}
+            disabled={statusSaving}
+          >
+            Cancelar
+          </button>
 
-  <button
-    type="button"
-    className="modal-button primary"
-    onClick={confirmStatusChange}
-  >
-    Aceptar
-  </button>
-</div>
+          <button
+            type="button"
+            className="modal-button primary"
+            onClick={confirmStatusChange}
+            disabled={statusSaving}
+          >
+            {statusSaving ? "Guardando..." : "Aceptar"}
+          </button>
         </div>
       </Modal>
     </section>
