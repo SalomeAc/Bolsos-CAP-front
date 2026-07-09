@@ -850,6 +850,32 @@
   border-color: #d8ecdf;
 }
 
+.client-cotizaciones-sidebar__item .status-en_produccion {
+  background: #eef4fc;
+  color: #1a4a8a;
+  border-color: #c8daf0;
+}
+
+.client-cotizaciones-sidebar__item .status-completada {
+  background: #eef8f2;
+  color: #1f5a3a;
+  border-color: #c8e8d4;
+}
+
+.detail-header--client .status-en_produccion,
+.client-cotizaciones-detail .status-en_produccion {
+  background: #eef4fc;
+  color: #1a4a8a;
+  border-color: #c8daf0;
+}
+
+.detail-header--client .status-completada,
+.client-cotizaciones-detail .status-completada {
+  background: #eef8f2;
+  color: #1f5a3a;
+  border-color: #c8e8d4;
+}
+
 .client-cotizaciones-sidebar__item .status-rechazada,
 .client-cotizaciones-sidebar__item .status-cancelada {
   background: #fff3f3;

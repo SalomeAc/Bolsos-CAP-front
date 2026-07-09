@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getMyQuotations } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Chat } from "../../components/Chat/Chat";
+import { getQuotationStatusLabel } from "../../utils/quotationStatus.js";
 import "./MisCotizacionesPage.css";
 
 export function MisCotizacionesPage() {
@@ -134,7 +135,7 @@ export function MisCotizacionesPage() {
                 <div className="quotation-item-header">
                   <h3>Administrador</h3>
                   <span className={`status-badge status-${quotation.status}`}>
-                    {quotation.status}
+                    {getQuotationStatusLabel(quotation.status)}
                   </span>
                 </div>
 
@@ -166,7 +167,7 @@ export function MisCotizacionesPage() {
               <span
                 className={`status-badge status-${selectedQuotation.status}`}
               >
-                {selectedQuotation.status}
+                {getQuotationStatusLabel(selectedQuotation.status)}
               </span>
             </div>
 

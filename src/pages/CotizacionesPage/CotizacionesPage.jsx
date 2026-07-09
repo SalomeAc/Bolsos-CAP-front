@@ -14,20 +14,15 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { Chat } from "../../components/Chat/Chat";
 import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
 import { AdminAiQuotationPanel } from "../../components/AdminAiQuotationPanel/AdminAiQuotationPanel";
+import { Modal } from "../../components/Modal/Modal.jsx";
+import {
+  getQuotationStatusLabel,
+  QUOTATION_STATUS_OPTIONS,
+} from "../../utils/quotationStatus.js";
 import "../MisCotizacionesPage/MisCotizacionesPage.css";
 import "./CotizacionesPage.css";
 
-const statusOptions = [
-  { value: "pendiente", label: "Pendiente" },
-  { value: "cotizada_ia", label: "Cotizada (IA)" },
-  { value: "en_revision", label: "En revisión" },
-  { value: "cotizada", label: "Cotizada" },
-  { value: "aceptada", label: "Aceptada" },
-  { value: "rechazada", label: "Rechazada" },
-  { value: "en_produccion", label: "En producción" },
-  { value: "completada", label: "Completada" },
-  { value: "cancelada", label: "Cancelada" },
-];
+const statusOptions = QUOTATION_STATUS_OPTIONS;
 
 export function CotizacionesPage() {
   const navigate = useNavigate();
@@ -47,6 +42,7 @@ export function CotizacionesPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusSaving, setStatusSaving] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
@@ -126,25 +122,52 @@ export function CotizacionesPage() {
   const handleQuotationUpdated = (updated) => {
     setQuotations((current) =>
       current.map((quotation) =>
-        quotation._id === updated._id ? updated : quotation,
+        String(quotation._id) === String(updated._id) ? updated : quotation,
       ),
     );
   };
 
-  const handleStatusChange = async (nextStatus) => {
-    if (!selectedQuotationId || !nextStatus || !token) return;
+  const handleStatusChangeSelection = (newStatus) => {
+    if (!selectedQuotation || newStatus === selectedQuotation.status) return;
+    setPendingStatusChange({
+      quotationId: selectedQuotation._id,
+      newStatus,
+      currentStatus: selectedQuotation.status,
+    });
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange || !token) return;
+
+    const { quotationId, newStatus, currentStatus } = pendingStatusChange;
+    if (newStatus === currentStatus) {
+      setPendingStatusChange(null);
+      return;
+    }
 
     try {
       setStatusSaving(true);
-      const updated = await updateQuotationStatus(selectedQuotationId, nextStatus, token);
+      setError(null);
+      const updated = await updateQuotationStatus(
+        quotationId,
+        newStatus,
+        token,
+      );
       handleQuotationUpdated(updated);
     } catch (err) {
       console.error("Error updating quotation status:", err);
-      setError(err.message);
+      setError(err.message || "No se pudo actualizar el estado");
     } finally {
       setStatusSaving(false);
+      setPendingStatusChange(null);
     }
   };
+
+  const selectedStatusValue =
+    pendingStatusChange &&
+    String(pendingStatusChange.quotationId) === String(selectedQuotation?._id)
+      ? pendingStatusChange.newStatus
+      : selectedQuotation?.status;
 
   const handleNotificationClick = async (notification) => {
     try {
@@ -328,7 +351,7 @@ export function CotizacionesPage() {
                     {quotation.user?.firstName} {quotation.user?.lastName}
                   </h3>
                   <span className={`status-badge status-${quotation.status}`}>
-                    {quotation.status}
+                    {getQuotationStatusLabel(quotation.status)}
                   </span>
                 </div>
 
@@ -401,8 +424,8 @@ export function CotizacionesPage() {
                   <select
                     id="admin-status-select"
                     className="status-select-control detail-action-control"
-                    value={selectedQuotation.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
+                    value={selectedStatusValue || "pendiente"}
+                    onChange={(e) => handleStatusChangeSelection(e.target.value)}
                     disabled={statusSaving}
                     aria-label="Cambiar estado de la cotización"
                   >
@@ -444,6 +467,44 @@ export function CotizacionesPage() {
           </div>
         )}
       </div>
+
+      <Modal
+        open={Boolean(pendingStatusChange)}
+        title="Confirmar cambio de estado"
+        description="Esta acción actualizará la solicitud y enviará una notificación al cliente."
+        onClose={() => !statusSaving && setPendingStatusChange(null)}
+      >
+        <p>
+          ¿Deseas continuar con el cambio de estado de esta cotización? El
+          cliente recibirá una notificación informando el cambio.
+        </p>
+        {pendingStatusChange && (
+          <p>
+            <strong>
+              {getQuotationStatusLabel(pendingStatusChange.currentStatus)} →{" "}
+              {getQuotationStatusLabel(pendingStatusChange.newStatus)}
+            </strong>
+          </p>
+        )}
+        <div className="modal-actions">
+          <button
+            type="button"
+            className="modal-button secondary"
+            onClick={() => setPendingStatusChange(null)}
+            disabled={statusSaving}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="modal-button primary"
+            onClick={confirmStatusChange}
+            disabled={statusSaving}
+          >
+            {statusSaving ? "Guardando..." : "Aceptar"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
