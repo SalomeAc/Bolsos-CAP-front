@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getQuotationTraceability } from "../../services/quotationService";
+import { getQuotationStatusLabel } from "../../utils/quotationStatus.js";
 import "./TraceabilityPanel.css";
 
 function formatDate(value) {
@@ -69,7 +70,7 @@ export function TraceabilityPanel({ quotationId, token, onClose }) {
             {data.solicitud ? (
               <dl className="traceability-panel__dl">
                 <div><dt>Código</dt><dd>{data.solicitud.code || "—"}</dd></div>
-                <div><dt>Estado</dt><dd>{data.solicitud.status}</dd></div>
+                <div><dt>Estado</dt><dd>{getQuotationStatusLabel(data.solicitud.status)}</dd></div>
                 <div><dt>Fecha</dt><dd>{formatDate(data.solicitud.createdAt)}</dd></div>
                 <div><dt>Cliente</dt><dd>{data.cliente?.firstName} {data.cliente?.lastName}</dd></div>
               </dl>
@@ -81,7 +82,7 @@ export function TraceabilityPanel({ quotationId, token, onClose }) {
           <section className="traceability-panel__section">
             <h4>Cotización</h4>
             <dl className="traceability-panel__dl">
-              <div><dt>Estado</dt><dd>{data.cotizacion?.status}</dd></div>
+              <div><dt>Estado</dt><dd>{getQuotationStatusLabel(data.cotizacion?.status)}</dd></div>
               <div>
                 <dt>Monto final</dt>
                 <dd>

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getAllQuotations } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Chat } from "../../components/Chat/Chat";
+import { getQuotationStatusLabel } from "../../utils/quotationStatus.js";
 import "../../pages/MisCotizacionesPage/MisCotizacionesPage.css";
 
 export function AdminMessagesPage() {
@@ -153,7 +154,7 @@ export function AdminMessagesPage() {
                     {quotation.user?.firstName} {quotation.user?.lastName}
                   </h3>
                   <span className={`status-badge status-${quotation.status}`}>
-                    {getStatusLabel(quotation.status)}
+                    {getQuotationStatusLabel(quotation.status)}
                   </span>
                 </div>
 
@@ -190,7 +191,7 @@ export function AdminMessagesPage() {
               <span
                 className={`status-badge status-${selectedQuotation.status}`}
               >
-                {getStatusLabel(selectedQuotation.status)}
+                {getQuotationStatusLabel(selectedQuotation.status)}
               </span>
             </div>
 
@@ -247,17 +248,3 @@ function getAvatarColor(userId) {
   return colors[Math.abs(hash) % colors.length];
 }
 
-function getStatusLabel(status) {
-  const labels = {
-    pendiente: "Pendiente",
-    cotizada_ia: "Cotizada (IA)",
-    en_revision: "En Revisión",
-    cotizada: "Cotizada",
-    aceptada: "Aceptada",
-    rechazada: "Rechazada",
-    en_produccion: "En Producción",
-    completada: "Completada",
-    cancelada: "Cancelada",
-  };
-  return labels[status] || status;
-}
