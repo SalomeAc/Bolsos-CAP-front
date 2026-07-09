@@ -48,11 +48,11 @@ export function NotificationBell() {
       }
       return false;
     },
-    [logout, navigate]
+    [logout, navigate],
   );
 
   const loadNotifications = useCallback(async () => {
-    if (!token || !isAdmin) return;
+    if (!token) return;
 
     if (isTokenExpired(token)) {
       handleAuthError("Token expired");
@@ -73,15 +73,15 @@ export function NotificationBell() {
         setError(err.message);
       }
     }
-  }, [token, isAdmin, handleAuthError]);
+  }, [token, handleAuthError]);
 
   useEffect(() => {
-    if (!isAdmin || !token || isTokenExpired(token)) return;
+    if (!token || isTokenExpired(token)) return;
 
     loadNotifications();
     const interval = setInterval(loadNotifications, 15000);
     return () => clearInterval(interval);
-  }, [isAdmin, token, loadNotifications]);
+  }, [token, loadNotifications]);
 
   useEffect(() => {
     if (!open) return;
@@ -95,8 +95,6 @@ export function NotificationBell() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
-
-  if (!isAdmin) return null;
 
   const handleToggle = async () => {
     const nextOpen = !open;
@@ -115,16 +113,19 @@ export function NotificationBell() {
         setUnreadCount((c) => Math.max(0, c - 1));
         setNotifications((prev) =>
           prev.map((n) =>
-            n._id === notification._id ? { ...n, read: true } : n
-          )
+            n._id === notification._id ? { ...n, read: true } : n,
+          ),
         );
       }
 
       setOpen(false);
-      const quotationId =
-        notification.quotation?._id || notification.quotation;
+      const quotationId = notification.quotation?._id || notification.quotation;
       if (quotationId) {
-        navigate("/cotizaciones", { state: { selectedQuotationId: quotationId } });
+        const destination = isAdmin ? "/cotizaciones" : "/mis-cotizaciones";
+
+        navigate(destination, {
+          state: { selectedQuotationId: quotationId },
+        });
       }
     } catch (err) {
       if (!handleAuthError(err.message)) {
@@ -154,7 +155,13 @@ export function NotificationBell() {
         aria-label={`Notificaciones${unreadCount > 0 ? `, ${unreadCount} sin leer` : ""}`}
         aria-expanded={open}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
           <path
             d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z"
             fill="currentColor"
@@ -168,11 +175,19 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="notification-bell__panel" role="region" aria-label="Panel de notificaciones">
+        <div
+          className="notification-bell__panel"
+          role="region"
+          aria-label="Panel de notificaciones"
+        >
           <div className="notification-bell__header">
             <h3>Notificaciones</h3>
             {unreadCount > 0 && (
-              <button type="button" className="notification-bell__mark-all" onClick={handleMarkAllRead}>
+              <button
+                type="button"
+                className="notification-bell__mark-all"
+                onClick={handleMarkAllRead}
+              >
                 Marcar todas leídas
               </button>
             )}

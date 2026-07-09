@@ -1,0 +1,150 @@
+.client-quote-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 6px 8px 6px 10px;
+  border: 1px solid #dce8df;
+  border-radius: 12px;
+  background: #f8fbf9;
+}
+
+.client-quote-bar__toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.client-quote-bar__label {
+  color: #3d5c4a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.client-quote-bar__toggle strong {
+  color: #1e3d2c;
+  font-size: 0.88rem;
+}
+
+.client-quote-bar__chevron {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #5a8a6e;
+  border-bottom: 2px solid #5a8a6e;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+
+.client-quote-bar__chevron.open {
+  transform: rotate(-135deg) translateY(2px);
+}
+
+.client-quote-bar__quick {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.client-quote-bar__body {
+  width: 100%;
+  padding: 4px 0 2px;
+  border-top: 1px solid rgba(220, 232, 223, 0.8);
+}
+
+.client-quote-bar__notes {
+  margin: 6px 0 0;
+  color: #4a5c52;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.client-quote-bar__error {
+  margin: 6px 0 0;
+  color: #b42318;
+  font-size: 0.78rem;
+}
+
+.client-quote-bar__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.client-quote-bar__btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.client-quote-bar__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.client-quote-bar__btn--accept {
+  background: #2f6f4d;
+  color: #fff;
+}
+
+.client-quote-bar__btn--accept:hover:not(:disabled) {
+  background: #255a3e;
+}
+
+.client-quote-bar__btn--reject {
+  background: #fff;
+  border-color: #e8b4b8;
+  color: #842029;
+}
+
+.client-quote-bar__btn--reject:hover:not(:disabled) {
+  background: #fff5f5;
+}
+
+.client-quote-chip--embedded {
+  margin: 0 0 12px;
+}
+
+.client-quote-bar--embedded {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-color: #e9def6;
+  background: #faf7fd;
+  box-shadow: 0 4px 14px rgba(43, 33, 66, 0.06);
+}
+
+.client-quote-bar--embedded .client-quote-bar__label {
+  color: #574685;
+}
+
+.client-quote-bar--embedded .client-quote-bar__toggle strong {
+  color: #2c2438;
+}
+
+.client-quote-chip {
+  display: inline-flex;
+  align-items: center;
+  margin: 8px 0 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f0edf8;
+  color: #574685;
+  font-size: 0.75rem;
+  font-weight: 600;
+}

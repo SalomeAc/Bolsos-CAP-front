@@ -5,14 +5,18 @@ import {
   updateQuotationStatus,
 } from "../../services/quotationService";
 import { useAuthStore } from "../../store/useAuthStore";
-import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
+import { Modal } from "../../components/Modal/Modal.jsx";
 import "./HistorialCotizacionesPage.css";
 import VoiceButton from "../../components/VoiceButton/VoiceButton";
 import "../../components/VoiceButton/VoiceButton.css";
 
 const statusOptions = [
   { value: "pendiente", label: "Pendiente" },
+  { value: "cotizada_ia", label: "Cotizada (IA)" },
   { value: "en_revision", label: "En revisión" },
+  { value: "cotizada", label: "Cotizada" },
+  { value: "aceptada", label: "Aceptada" },
+  { value: "rechazada", label: "Rechazada" },
   { value: "en_produccion", label: "En producción" },
   { value: "completada", label: "Completada" },
   { value: "cancelada", label: "Cancelada" },
@@ -20,9 +24,9 @@ const statusOptions = [
 
 const VOICE_STATUS_MAP = {
   pendiente: "pendiente",
-  "revisión": "en_revision",
+  revisión: "en_revision",
   revision: "en_revision",
-  "producción": "en_produccion",
+  producción: "en_produccion",
   produccion: "en_produccion",
   completada: "completada",
   cancelada: "cancelada",
@@ -71,7 +75,9 @@ function formatDate(value) {
 }
 
 function getQuotationPrice(quotation) {
-  return quotation?.finalQuotation?.amount ?? quotation?.aiQuotation?.amount ?? null;
+  return (
+    quotation?.finalQuotation?.amount ?? quotation?.aiQuotation?.amount ?? null
+  );
 }
 
 function formatPrice(quotation) {
@@ -116,7 +122,13 @@ export function HistorialCotizacionesPage() {
 
   // Feedback visual del texto reconocido (de la versión 2)
   const [voiceLabel, setVoiceLabel] = useState(null);
-  const [traceabilityQuotationId, setTraceabilityQuotationId] = useState(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
+
+  const goToQuotationChat = (quotationId) => {
+    navigate("/cotizaciones", {
+      state: { selectedQuotationId: quotationId },
+    });
+  };
 
   useEffect(() => {
     if (!userIsAdmin) navigate("/");
@@ -132,7 +144,9 @@ export function HistorialCotizacionesPage() {
         setQuotations(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error loading quotation history:", err);
-        setError(err.message || "No se pudo cargar el historial de cotizaciones");
+        setError(
+          err.message || "No se pudo cargar el historial de cotizaciones",
+        );
       } finally {
         setLoading(false);
       }
@@ -148,10 +162,7 @@ export function HistorialCotizacionesPage() {
     for (const [keyword, statusValue] of Object.entries(VOICE_STATUS_MAP)) {
       if (toPhonetic(command).includes(toPhonetic(keyword))) {
         detectedStatus = statusValue;
-        remaining = remaining
-          .toLowerCase()
-          .replace(keyword, "")
-          .trim();
+        remaining = remaining.toLowerCase().replace(keyword, "").trim();
         break;
       }
     }
@@ -171,17 +182,35 @@ export function HistorialCotizacionesPage() {
     setVoiceLabel(null);
   };
 
-  const handleStatusChange = async (quotationId, newStatus) => {
+  const handleStatusChangeSelection = (
+    quotationId,
+    newStatus,
+    currentStatus,
+  ) => {
+    setPendingStatusChange({ quotationId, newStatus, currentStatus });
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+
+    const { quotationId, newStatus, currentStatus } = pendingStatusChange;
+    if (newStatus === currentStatus) {
+      setPendingStatusChange(null);
+      return;
+    }
+
     try {
       await updateQuotationStatus(quotationId, newStatus, token);
       setQuotations((prev) =>
         prev.map((q) =>
-          q._id === quotationId ? { ...q, status: newStatus } : q
-        )
+          q._id === quotationId ? { ...q, status: newStatus } : q,
+        ),
       );
     } catch (err) {
       console.error(err);
       alert("No se pudo actualizar el estado");
+    } finally {
+      setPendingStatusChange(null);
     }
   };
 
@@ -218,7 +247,8 @@ export function HistorialCotizacionesPage() {
 
         const matchesDate =
           !dateFilter ||
-          new Date(quotation.createdAt).toLocaleDateString("en-CA") === dateFilter;
+          new Date(quotation.createdAt).toLocaleDateString("en-CA") ===
+            dateFilter;
 
         // Filtro de voz (fonético, independiente)
         const matchesVoiceQuery =
@@ -240,8 +270,18 @@ export function HistorialCotizacionesPage() {
           matchesVoiceStatus
         );
       })
-      .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
-  }, [quotations, searchTerm, productFilter, statusFilter, dateFilter, voiceQuery, voiceStatus]);
+      .sort(
+        (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0),
+      );
+  }, [
+    quotations,
+    searchTerm,
+    productFilter,
+    statusFilter,
+    dateFilter,
+    voiceQuery,
+    voiceStatus,
+  ]);
 
   if (!userIsAdmin) return null;
 
@@ -386,9 +426,8 @@ export function HistorialCotizacionesPage() {
                   <th>Producto / tipo</th>
                   <th>Solicitud</th>
                   <th>Fecha</th>
-                  <th>Estado</th>
+                  <th>Gestión</th>
                   <th>Precio</th>
-                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -396,16 +435,16 @@ export function HistorialCotizacionesPage() {
                   <tr
                     key={quotation._id}
                     className="quotation-row"
-                    onClick={() => navigate(`/quotation/${quotation._id}`)}
+                    onClick={() => goToQuotationChat(quotation._id)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        navigate(`/quotation/${quotation._id}`);
+                        goToQuotationChat(quotation._id);
                       }
                     }}
                     tabIndex={0}
                     role="link"
-                    aria-label={`Ver detalle de ${getCustomerName(quotation)}`}
+                    aria-label={`Abrir chat de ${getCustomerName(quotation)}`}
                   >
                     <td>
                       <div className="customer-cell">
@@ -431,13 +470,22 @@ export function HistorialCotizacionesPage() {
                     <td>{quotation?.solicitud?.code || "—"}</td>
                     <td>{formatDate(quotation?.createdAt)}</td>
                     <td>
-                      <div className="status-select-wrapper">
+                      <div
+                        className="historial-row-actions"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
                         <select
-                          className={`status-select status-${quotation.status}`}
+                          id={`status-${quotation._id}`}
+                          className={`historial-cell-control historial-status-select status-${quotation.status}`}
                           value={quotation.status}
-                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Estado de ${getCustomerName(quotation)}`}
                           onChange={(e) =>
-                            handleStatusChange(quotation._id, e.target.value)
+                            handleStatusChangeSelection(
+                              quotation._id,
+                              e.target.value,
+                              quotation.status,
+                            )
                           }
                         >
                           {statusOptions.map((status) => (
@@ -446,6 +494,14 @@ export function HistorialCotizacionesPage() {
                             </option>
                           ))}
                         </select>
+                        <button
+                          type="button"
+                          className="historial-cell-control historial-chat-btn"
+                          onClick={() => goToQuotationChat(quotation._id)}
+                          aria-label={`Abrir chat de ${getCustomerName(quotation)}`}
+                        >
+                          Chat
+                        </button>
                       </div>
                     </td>
                     <td>
@@ -459,22 +515,6 @@ export function HistorialCotizacionesPage() {
                         {formatPrice(quotation)}
                       </strong>
                     </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="historial-trace-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTraceabilityQuotationId(
-                            traceabilityQuotationId === quotation._id
-                              ? null
-                              : quotation._id
-                          );
-                        }}
-                      >
-                        Trazabilidad
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -483,13 +523,51 @@ export function HistorialCotizacionesPage() {
         )}
       </section>
 
-      {traceabilityQuotationId && (
-        <TraceabilityPanel
-          quotationId={traceabilityQuotationId}
-          token={token}
-          onClose={() => setTraceabilityQuotationId(null)}
-        />
-      )}
+      <Modal
+        open={Boolean(pendingStatusChange)}
+        title="Confirmar cambio de estado"
+        description="Esta acción actualizará la solicitud y enviará una notificación al cliente."
+        onClose={() => setPendingStatusChange(null)}
+      >
+        <p>
+          ¿Deseas continuar con el cambio de estado de esta cotización? El
+          cliente recibirá una notificación informando el cambio.
+        </p>
+        {pendingStatusChange && (
+          <p>
+            <strong>
+              {getStatusLabel(pendingStatusChange.currentStatus)} →{" "}
+              {getStatusLabel(pendingStatusChange.newStatus)}
+            </strong>
+          </p>
+        )}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            marginTop: "16px",
+          }}
+        >
+          <div className="modal-actions">
+  <button
+    type="button"
+    className="modal-button secondary"
+    onClick={() => setPendingStatusChange(null)}
+  >
+    Cancelar
+  </button>
+
+  <button
+    type="button"
+    className="modal-button primary"
+    onClick={confirmStatusChange}
+  >
+    Aceptar
+  </button>
+</div>
+        </div>
+      </Modal>
     </section>
   );
 }

@@ -74,8 +74,8 @@ export function Navigation() {
 
         {currentUser && hasValidSession ? (
           <>
-            {isAdmin && <NotificationBell />}
-            <span style={{ marginRight: "1rem", fontSize: "0.9rem" }}>
+            <NotificationBell />
+            <span className="header-user-name">
               {currentUser.firstName || currentUser.name}
             </span>
             <button

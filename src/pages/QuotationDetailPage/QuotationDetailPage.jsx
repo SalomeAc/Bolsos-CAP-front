@@ -13,6 +13,8 @@ export function QuotationDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [responding, setResponding] = useState(false)
+  const [proposedAmount, setProposedAmount] = useState('')
+  const [proposedNotes, setProposedNotes] = useState('')
 
   const token = authStore.authToken
   const userId = authStore.currentUser?.id
@@ -57,6 +59,30 @@ export function QuotationDetailPage() {
     }
   }
 
+  const handlePropose = async () => {
+    if (!proposedAmount.trim()) {
+      setError('Debes ingresar un precio propuesto')
+      return
+    }
+
+    try {
+      setResponding(true)
+      setError(null)
+      const updated = await respondQuotation(quotationId, {
+        decision: 'propuesta',
+        proposedAmount: Number(proposedAmount),
+        currency: quotation.finalQuotation?.currency || quotation.aiQuotation?.currency || 'COP',
+        notes: proposedNotes,
+      }, token)
+      setQuotation(updated)
+    } catch (err) {
+      console.error('Error proposing quotation price:', err)
+      setError(err.message)
+    } finally {
+      setResponding(false)
+    }
+  }
+
   if (loading) {
     return (
       <section className="quotation-detail-loading">
@@ -81,6 +107,9 @@ export function QuotationDetailPage() {
 
   const isOwner = quotation.user === userId || (quotation.user._id && quotation.user._id === userId)
   const canRespond = isOwner && quotation.status === 'cotizada'
+  const currentAmount = quotation.finalQuotation?.amount ?? null
+  const currentCurrency = quotation.finalQuotation?.currency || 'COP'
+  const showFinalQuote = Boolean(quotation.finalQuotation?.amount != null)
 
   return (
     <section className="quotation-detail-page">
@@ -190,7 +219,7 @@ export function QuotationDetailPage() {
             </div>
           )}
 
-          {quotation.finalQuotation && (
+          {showFinalQuote && (
             <div className="quotation-info-section quotation-final-section">
               <h2>Cotización Final</h2>
               <div className="final-quotation-box">
@@ -199,17 +228,17 @@ export function QuotationDetailPage() {
                   <span className="value">
                     {new Intl.NumberFormat('es-CO', {
                       style: 'currency',
-                      currency: quotation.finalQuotation.currency || 'COP',
-                    }).format(quotation.finalQuotation.amount)}
+                      currency: currentCurrency,
+                    }).format(currentAmount)}
                   </span>
                 </div>
-                {quotation.finalQuotation.notes && (
+                {quotation.finalQuotation?.notes && (
                   <div className="notes">
                     <span className="label">Notas:</span>
                     <p>{quotation.finalQuotation.notes}</p>
                   </div>
                 )}
-                {quotation.finalQuotation.quotedAt && (
+                {quotation.finalQuotation?.quotedAt && (
                   <div className="quoted-date">
                     <small>Enviada el {new Date(quotation.finalQuotation.quotedAt).toLocaleDateString('es-ES')}</small>
                   </div>
@@ -232,8 +261,48 @@ export function QuotationDetailPage() {
                   >
                     {responding ? 'Procesando...' : '✕ Rechazar Cotización'}
                   </button>
+                  <div className="proposal-box">
+                    <label htmlFor="proposedAmount">Proponer un precio</label>
+                    <input
+                      id="proposedAmount"
+                      type="number"
+                      min="0"
+                      placeholder="Ej. 180000"
+                      value={proposedAmount}
+                      onChange={(e) => setProposedAmount(e.target.value)}
+                    />
+                    <textarea
+                      placeholder="Motivo o comentarios opcionales"
+                      value={proposedNotes}
+                      onChange={(e) => setProposedNotes(e.target.value)}
+                    />
+                    <button
+                      className="button button-secondary"
+                      onClick={handlePropose}
+                      disabled={responding}
+                    >
+                      {responding ? 'Enviando...' : 'Proponer precio'}
+                    </button>
+                  </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {quotation.clientResponse && (
+            <div className="quotation-info-section">
+              <h2>Tu respuesta registrada</h2>
+              <p><strong>Decisión:</strong> {getStatusLabel(quotation.clientResponse.decision)}</p>
+              {quotation.clientResponse.proposedAmount != null && (
+                <p>
+                  <strong>Precio propuesto:</strong>{' '}
+                  {new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: quotation.clientResponse.currency || 'COP',
+                  }).format(quotation.clientResponse.proposedAmount)}
+                </p>
+              )}
+              {quotation.clientResponse.notes && <p><strong>Notas:</strong> {quotation.clientResponse.notes}</p>}
             </div>
           )}
         </article>
@@ -246,7 +315,20 @@ export function QuotationDetailPage() {
               {isOwner ? 'Comunícate con la administradora' : 'Comunícate con el cliente'}
             </span>
           </div>
-          <Chat quotationId={quotationId} quotation={quotation} isAdmin={userIsAdmin} />
+          <Chat
+            quotationId={quotationId}
+            quotation={quotation}
+            isAdmin={userIsAdmin}
+            onQuotationUpdated={userIsAdmin ? undefined : setQuotation}
+            onRequestQuotationRefresh={
+              userIsAdmin
+                ? undefined
+                : async () => {
+                    const data = await getQuotation(quotationId, token)
+                    setQuotation(data)
+                  }
+            }
+          />
         </div>
       </div>
     </section>
@@ -260,6 +342,7 @@ function getStatusLabel(status) {
     'cotizada_ia': 'Cotizada (IA)',
     'en_revision': 'En Revisión',
     'cotizada': 'Cotizada',
+    'propuesta': 'Propuesta enviada',
     'aceptada': 'Aceptada',
     'rechazada': 'Rechazada',
     'en_produccion': 'En Producción',

@@ -1,10 +1,33 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getAllQuotations } from "../../services/quotationService";
+import {
+  getAllQuotations,
+  updateQuotationStatus,
+} from "../../services/quotationService";
+import {
+  getNotifications,
+  getUnreadNotificationCount,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "../../services/notificationService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Chat } from "../../components/Chat/Chat";
 import { TraceabilityPanel } from "../../components/Traceability/TraceabilityPanel";
+import { AdminAiQuotationPanel } from "../../components/AdminAiQuotationPanel/AdminAiQuotationPanel";
 import "../MisCotizacionesPage/MisCotizacionesPage.css";
+import "./CotizacionesPage.css";
+
+const statusOptions = [
+  { value: "pendiente", label: "Pendiente" },
+  { value: "cotizada_ia", label: "Cotizada (IA)" },
+  { value: "en_revision", label: "En revisión" },
+  { value: "cotizada", label: "Cotizada" },
+  { value: "aceptada", label: "Aceptada" },
+  { value: "rechazada", label: "Rechazada" },
+  { value: "en_produccion", label: "En producción" },
+  { value: "completada", label: "Completada" },
+  { value: "cancelada", label: "Cancelada" },
+];
 
 export function CotizacionesPage() {
   const navigate = useNavigate();
@@ -23,6 +46,12 @@ export function CotizacionesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Verificar que el usuario es administrador
   useEffect(() => {
@@ -69,6 +98,88 @@ export function CotizacionesPage() {
   }, [selectedQuotationId]);
 
   useEffect(() => {
+    if (!token || !userIsAdmin) return;
+
+    const loadNotifications = async () => {
+      try {
+        setNotificationsLoading(true);
+        setNotificationsError(null);
+        const [items, countData] = await Promise.all([
+          getNotifications(token, { limit: 6 }),
+          getUnreadNotificationCount(token),
+        ]);
+        setNotifications(Array.isArray(items) ? items : []);
+        setUnreadCount(countData.count ?? 0);
+      } catch (err) {
+        console.error("Error loading admin notifications:", err);
+        setNotificationsError(err.message);
+      } finally {
+        setNotificationsLoading(false);
+      }
+    };
+
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [token, userIsAdmin]);
+
+  const handleQuotationUpdated = (updated) => {
+    setQuotations((current) =>
+      current.map((quotation) =>
+        quotation._id === updated._id ? updated : quotation,
+      ),
+    );
+  };
+
+  const handleStatusChange = async (nextStatus) => {
+    if (!selectedQuotationId || !nextStatus || !token) return;
+
+    try {
+      setStatusSaving(true);
+      const updated = await updateQuotationStatus(selectedQuotationId, nextStatus, token);
+      handleQuotationUpdated(updated);
+    } catch (err) {
+      console.error("Error updating quotation status:", err);
+      setError(err.message);
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  const handleNotificationClick = async (notification) => {
+    try {
+      if (!notification.read) {
+        await markNotificationAsRead(notification._id, token);
+        setUnreadCount((count) => Math.max(0, count - 1));
+        setNotifications((current) =>
+          current.map((item) =>
+            item._id === notification._id ? { ...item, read: true } : item,
+          ),
+        );
+      }
+
+      const quotationId = notification.quotation?._id || notification.quotation;
+      if (quotationId) {
+        setSelectedQuotationId(quotationId);
+      }
+    } catch (err) {
+      console.error("Error opening notification:", err);
+      setNotificationsError(err.message);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsAsRead(token);
+      setUnreadCount(0);
+      setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+    } catch (err) {
+      console.error("Error marking notifications as read:", err);
+      setNotificationsError(err.message);
+    }
+  };
+
+  useEffect(() => {
     if (quotations.length === 0) return;
 
     setSelectedQuotationId((currentId) => {
@@ -111,20 +222,82 @@ export function CotizacionesPage() {
   }
 
   return (
-    <div className="mis-cotizaciones-container">
-      <div className="mis-cotizaciones-list-section">
-        <div className="mis-cotizaciones-header">
-          <h2>Cotizaciones de Clientes</h2>
+    <div className="mis-cotizaciones-container admin-cotizaciones-layout">
+      <div className="mis-cotizaciones-list-section admin-cotizaciones-sidebar">
+        <section className="admin-notifications-panel admin-notifications-panel--compact">
+          <div className="admin-notifications-panel__header">
+            <button
+              type="button"
+              className="admin-notifications-panel__toggle"
+              onClick={() => setShowNotifications((value) => !value)}
+              aria-expanded={showNotifications}
+            >
+              <span>
+                <span className="admin-notifications-panel__eyebrow">Alertas</span>
+                <h3>Notificaciones</h3>
+              </span>
+              <span className="admin-notifications-panel__toggle-meta">
+                {unreadCount > 0 ? `${unreadCount} nuevas` : "Sin nuevas"}
+                <span className={`admin-notifications-panel__chevron${showNotifications ? " open" : ""}`} />
+              </span>
+            </button>
+            {showNotifications && unreadCount > 0 && (
+              <button
+                type="button"
+                className="admin-notifications-panel__mark-all"
+                onClick={handleMarkAllRead}
+              >
+                Marcar leídas
+              </button>
+            )}
+          </div>
+
+          {showNotifications && notificationsError && (
+            <p className="admin-notifications-panel__error" role="alert">
+              {notificationsError}
+            </p>
+          )}
+
+          {showNotifications && (
+            notificationsLoading ? (
+              <p className="admin-notifications-panel__empty">Cargando notificaciones...</p>
+            ) : notifications.length === 0 ? (
+              <p className="admin-notifications-panel__empty">No hay alertas nuevas.</p>
+            ) : (
+              <ul className="admin-notifications-panel__list">
+                {notifications.map((notification) => (
+                  <li key={notification._id}>
+                    <button
+                      type="button"
+                      className={`admin-notifications-panel__item${notification.read ? "" : " unread"}`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <span className="admin-notifications-panel__title">
+                        {notification.title}
+                      </span>
+                      <span className="admin-notifications-panel__message">
+                        {notification.message}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          )}
+        </section>
+
+        <div className="mis-cotizaciones-header admin-cotizaciones-sidebar__header">
+          <h2>Cotizaciones</h2>
           <input
-            type="text"
+            type="search"
             placeholder="Buscar cliente..."
-            className="search-input"
+            className="search-input admin-cotizaciones-sidebar__search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <div className="mis-cotizaciones-list">
+        <div className="mis-cotizaciones-list admin-cotizaciones-sidebar__list">
           {loading && <div className="empty-state">Cargando...</div>}
 
           {error && (
@@ -142,7 +315,7 @@ export function CotizacionesPage() {
           {sortedQuotations.map((quotation) => (
             <div
               key={quotation._id}
-              className={`quotation-item ${selectedQuotationId === quotation._id ? "active" : ""}`}
+              className={`quotation-item admin-cotizaciones-sidebar__item ${selectedQuotationId === quotation._id ? "active" : ""}`}
               onClick={() => setSelectedQuotationId(quotation._id)}
             >
               <div className="quotation-item-avatar">
@@ -169,6 +342,15 @@ export function CotizacionesPage() {
                 <p className="quotation-item-description">
                   {quotation.user?.email || "Sin email"}
                 </p>
+                <p className="quotation-item-description">
+                  {quotation.aiQuotation?.amount != null
+                    ? `IA: ${new Intl.NumberFormat("es-CO", {
+                        style: "currency",
+                        currency: quotation.aiQuotation.currency || "COP",
+                        maximumFractionDigits: 0,
+                      }).format(quotation.aiQuotation.amount)}`
+                    : "Sin precio IA aún"}
+                </p>
               </div>
 
               <time className="quotation-item-date">
@@ -182,32 +364,55 @@ export function CotizacionesPage() {
       <div className="mis-cotizaciones-detail-section">
         {selectedQuotation ? (
           <>
-            <div className="detail-header">
+            <div className="detail-header detail-header--admin">
               <div className="detail-header-content">
-                <h2>
+                <h2 className="detail-client-name">
                   {selectedQuotation.user?.firstName}{" "}
                   {selectedQuotation.user?.lastName}
                 </h2>
-                <p className="detail-email">{selectedQuotation.user?.email}</p>
-                {selectedQuotation.solicitud?.code && (
-                  <p className="detail-solicitud-code">
-                    Solicitud: {selectedQuotation.solicitud.code}
-                  </p>
-                )}
+                <p className="detail-client-meta">
+                  <span className="detail-email">
+                    {selectedQuotation.user?.email}
+                  </span>
+                  {selectedQuotation.solicitud?.code && (
+                    <>
+                      <span className="detail-meta-sep" aria-hidden="true">
+                        ·
+                      </span>
+                      <span className="detail-solicitud-code">
+                        {selectedQuotation.solicitud.code}
+                      </span>
+                    </>
+                  )}
+                </p>
               </div>
-              <div className="detail-header-actions">
+              <div className="detail-header-actions detail-header-actions--aligned">
                 <button
                   type="button"
-                  className="traceability-toggle"
+                  className="detail-action-control traceability-toggle"
                   onClick={() => setShowTraceability((v) => !v)}
                 >
                   {showTraceability ? "Ocultar trazabilidad" : "Ver trazabilidad"}
                 </button>
-                <span
-                  className={`status-badge status-${selectedQuotation.status}`}
-                >
-                  {selectedQuotation.status}
-                </span>
+                <div className="status-select-shell status-select-shell--compact status-select-shell--inline">
+                  <label className="status-select-label" htmlFor="admin-status-select">
+                    Estado
+                  </label>
+                  <select
+                    id="admin-status-select"
+                    className="status-select-control detail-action-control"
+                    value={selectedQuotation.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    disabled={statusSaving}
+                    aria-label="Cambiar estado de la cotización"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -218,6 +423,12 @@ export function CotizacionesPage() {
                 onClose={() => setShowTraceability(false)}
               />
             )}
+
+            <AdminAiQuotationPanel
+              quotation={selectedQuotation}
+              token={token}
+              onQuotationUpdated={handleQuotationUpdated}
+            />
 
             <div className="detail-chat-section">
               <Chat

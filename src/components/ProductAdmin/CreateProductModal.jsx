@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "../Modal/Modal.jsx";
+import { DimensionsEditor } from "./DimensionsEditor.jsx";
+import { validateDimensionsValue } from "./dimensionsUtils.js";
+import { createProductForm } from "../../services/productService.js";
 import "./CreateProductModal.css";
+import "./DimensionsEditor.css";
 
 const initialFormState = {
   name: "",
@@ -9,7 +13,6 @@ const initialFormState = {
   dimensions: "",
   materials: "",
   type: "",
-  photo: "",
 };
 
 const initialErrors = {
@@ -22,18 +25,17 @@ const initialErrors = {
   photo: "",
 };
 
-function isValidUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
+const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-export function CreateProductModal({ open, onClose, onCreate }) {
+export function CreateProductModal({ open, onClose, authToken, onCreated }) {
+  const fileInputRef = useRef(null);
   const [formState, setFormState] = useState(initialFormState);
   const [errors, setErrors] = useState(initialErrors);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -42,7 +44,23 @@ export function CreateProductModal({ open, onClose, onCreate }) {
 
     setFormState(initialFormState);
     setErrors(initialErrors);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setIsSubmitting(false);
+    setSubmitError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreview) {
+        URL.revokeObjectURL(photoPreview);
+      }
+    };
+  }, [photoPreview]);
 
   const validate = () => {
     const nextErrors = { ...initialErrors };
@@ -60,8 +78,9 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       nextErrors.color = "El color es obligatorio.";
     }
 
-    if (!formState.dimensions.trim()) {
-      nextErrors.dimensions = "Las dimensiones son obligatorias.";
+    const dimensionsError = validateDimensionsValue(formState.dimensions);
+    if (dimensionsError) {
+      nextErrors.dimensions = dimensionsError;
     }
 
     if (!formState.materials.trim()) {
@@ -72,11 +91,16 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       nextErrors.type = "El tipo de producto es obligatorio.";
     }
 
-    if (!formState.photo.trim() || !isValidUrl(formState.photo.trim())) {
-      nextErrors.photo = "Ingresa una URL de imagen válida.";
+    if (!photoFile) {
+      nextErrors.photo = "Debes subir una imagen del producto.";
     }
 
     return nextErrors;
+  };
+
+  const handleDimensionsChange = (value) => {
+    setFormState((current) => ({ ...current, dimensions: value }));
+    setErrors((current) => ({ ...current, dimensions: "" }));
   };
 
   const handleChange = (event) => {
@@ -85,18 +109,54 @@ export function CreateProductModal({ open, onClose, onCreate }) {
     setErrors((current) => ({ ...current, [name]: "" }));
   };
 
-  function transformDriveUrl(url) {
-  const match = url.match(/\/d\/([^/]+)/);
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0] ?? null;
 
-  if (!match) {
-    return url;
-  }
+    if (file) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setErrors((current) => ({
+          ...current,
+          photo: "Solo se permiten imágenes JPG, PNG, WEBP o GIF.",
+        }));
+        event.target.value = "";
+        return;
+      }
 
-  return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-}
+      if (file.size > MAX_SIZE_BYTES) {
+        setErrors((current) => ({
+          ...current,
+          photo: "La imagen no puede superar 5 MB.",
+        }));
+        event.target.value = "";
+        return;
+      }
+    }
 
-  const handleSubmit = (event) => {
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview(file ? URL.createObjectURL(file) : null);
+    setErrors((current) => ({ ...current, photo: "" }));
+  };
+
+  const handleClearPhoto = () => {
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+
+    setPhotoFile(null);
+    setPhotoPreview(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitError("");
 
     const nextErrors = validate();
     const invalidFields = Object.values(nextErrors).filter(Boolean);
@@ -106,25 +166,39 @@ export function CreateProductModal({ open, onClose, onCreate }) {
       return;
     }
 
-    const newProduct = {
-      name: formState.name.trim(),
-      description: formState.description.trim(),
-      color: formState.color.trim(),
-      dimensions: formState.dimensions.trim(),
-      materials: formState.materials.trim(),
-      type: formState.type.trim(),
-      photo: transformDriveUrl(formState.photo.trim()),
-    };
+    if (!authToken) {
+      setSubmitError("Debes iniciar sesión como administradora.");
+      return;
+    }
 
-    onCreate(newProduct);
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("name", formState.name.trim());
+      formData.append("description", formState.description.trim());
+      formData.append("color", formState.color.trim());
+      formData.append("dimensions", formState.dimensions.trim());
+      formData.append("materials", formState.materials.trim());
+      formData.append("type", formState.type.trim());
+      formData.append("photo", photoFile);
+
+      const createdProduct = await createProductForm(formData, authToken);
+      onCreated?.(createdProduct);
+    } catch (error) {
+      setSubmitError(error.message || "No se pudo crear el producto.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Modal
       open={open}
       title="Crear nuevo producto"
-      description="Registra un producto nuevo en el catálogo. Todos los campos son obligatorios y la imagen debe usar una URL válida."
+      description="Registra un producto nuevo en el catálogo. Todos los campos son obligatorios, incluida la imagen."
       onClose={onClose}
+      className="create-product-modal"
     >
       <form className="create-product-form" onSubmit={handleSubmit} noValidate>
         <div className="form-grid">
@@ -158,35 +232,29 @@ export function CreateProductModal({ open, onClose, onCreate }) {
             ) : null}
           </label>
 
-          <label className="form-field">
-            <span>Color</span>
+          <label className="form-field form-field--full">
+            <span>Colores</span>
             <input
               name="color"
               value={formState.color}
               onChange={handleChange}
-              placeholder="Ej. beige, terracota"
+              placeholder="Separa con comas. Ej. beige, terracota, negro"
               autoComplete="off"
               required
             />
+            <p className="form-field__hint">
+              Escribe un color por opción, separados por comas.
+            </p>
             {errors.color ? (
               <span className="field-error">{errors.color}</span>
             ) : null}
           </label>
 
-          <label className="form-field">
-            <span>Dimensiones</span>
-            <input
-              name="dimensions"
-              value={formState.dimensions}
-              onChange={handleChange}
-              placeholder="Ej. 26 x 22 x 8 cm"
-              autoComplete="off"
-              required
-            />
-            {errors.dimensions ? (
-              <span className="field-error">{errors.dimensions}</span>
-            ) : null}
-          </label>
+          <DimensionsEditor
+            value={formState.dimensions}
+            onChange={handleDimensionsChange}
+            error={errors.dimensions}
+          />
 
           <label className="form-field form-field--full">
             <span>Materiales</span>
@@ -203,20 +271,76 @@ export function CreateProductModal({ open, onClose, onCreate }) {
             ) : null}
           </label>
 
-          <label className="form-field form-field--full">
-            <span>Foto (URL)</span>
-            <input
-              name="photo"
-              value={formState.photo}
-              onChange={handleChange}
-              placeholder="https://..."
-              autoComplete="off"
-              required
-            />
+          <div className="form-field form-field--full">
+            <span>Foto</span>
+            <div className="photo-upload-row">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                aria-label="Subir imagen del producto"
+                required
+              />
+              <div className="photo-preview-slot">
+                <div
+                  className={`photo-preview-box${photoPreview ? " photo-preview-box--filled" : ""}`}
+                  aria-label={
+                    photoPreview
+                      ? "Vista previa de la imagen cargada"
+                      : "Sin imagen cargada"
+                  }
+                >
+                  {photoPreview ? (
+                    <>
+                      <div className="photo-preview-media">
+                        <img src={photoPreview} alt="" />
+                      </div>
+                      <button
+                        type="button"
+                        className="photo-preview-clear"
+                        onClick={handleClearPhoto}
+                        aria-label="Quitar foto"
+                        title="Quitar foto"
+                      >
+                        <svg
+                          viewBox="0 0 12 12"
+                          width="10"
+                          height="10"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M2 2l8 8M10 2L2 10"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="photo-preview-placeholder" aria-hidden="true">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="3" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="M21 15l-5-5L5 21" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
             {errors.photo ? (
               <span className="field-error">{errors.photo}</span>
             ) : null}
-          </label>
+          </div>
 
           <label className="form-field form-field--full">
             <span>Descripción</span>
@@ -234,16 +358,21 @@ export function CreateProductModal({ open, onClose, onCreate }) {
           </label>
         </div>
 
+        {submitError ? (
+          <span className="field-error">{submitError}</span>
+        ) : null}
+
         <div className="form-actions">
           <button
             className="button button-secondary"
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Cancelar
           </button>
-          <button className="button button-primary" type="submit">
-            Agregar producto
+          <button className="button button-primary" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Agregando..." : "Agregar producto"}
           </button>
         </div>
       </form>
