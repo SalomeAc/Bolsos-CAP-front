@@ -55,3 +55,17 @@ export async function syncProductVariants(productId, token) {
 
   return handleResponse(response);
 }
+
+export async function deleteProductVariant(productId, variantId, token) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/products/${productId}/variants/${variantId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  return handleResponse(response);
+}
