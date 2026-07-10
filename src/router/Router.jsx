@@ -20,6 +20,7 @@ import { ProductPage } from "../pages/ProductPage/ProductPage.jsx";
 import { useProductsStore } from "../store/useProductsStore.js";
 import { useAuthStore, isTokenExpired } from "../store/useAuthStore.js";
 import { CotizarPage } from "../pages/CotizarPage/CotizarPage.jsx";
+import { ImageAnalysisPage } from "../pages/ImageAnalysisPage/ImageAnalysisPage.jsx";
 
 function ProductRoute() {
   const { code } = useParams();
@@ -108,6 +109,15 @@ export default function Router() {
         element={
           <ProtectedRoute
             element={<HistorialCotizacionesPage />}
+            requiresAuth={true}
+          />
+        }
+      />
+      <Route
+        path="/admin/analisis-imagen"
+        element={
+          <ProtectedRoute
+            element={<ImageAnalysisPage />}
             requiresAuth={true}
           />
         }
